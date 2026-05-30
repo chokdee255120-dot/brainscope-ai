@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BrainScope AI — Test Report</title>
+<style>
+  :root {
+    --teal:#0EA5A0; --teal-dark:#0b8a85; --teal-pale:#E6F7F7;
+    --dark:#0D1F2D; --mid:#3D5A6B; --light:#8AA8B8; --border:#E2EEF0;
+    --bg:#F8FFFE;
+    --bleeding:#EF4444; --glioma:#F97316; --ischemia:#8B5CF6;
+    --meningioma:#0EA5A0; --normal:#10B981; --pituitary:#F59E0B;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--dark); }
+
+  header {
+    background:linear-gradient(135deg,var(--dark),#152535);
+    color:white; padding:32px 5%; display:flex; align-items:center; gap:16px;
+  }
+  .logo-icon {
+    width:48px; height:48px; border-radius:12px;
+    background:linear-gradient(135deg,var(--teal),#5ECFCA);
+    display:flex; align-items:center; justify-content:center;
+  }
+  header h1 { font-size:1.6rem; font-weight:800; }
+  header p  { color:rgba(255,255,255,.55); font-size:.9rem; margin-top:4px; }
+
+  main { max-width:1100px; margin:0 auto; padding:40px 24px; }
+
+  /* ── stat cards ── */
+  .stat-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:40px; }
+  .stat-card {
+    background:white; border:1px solid var(--border); border-radius:14px;
+    padding:20px 24px;
+  }
+  .stat-card .val { font-size:2rem; font-weight:800; color:var(--teal); }
+  .stat-card .lbl { font-size:.82rem; color:var(--light); margin-top:4px; }
+
+  /* ── section ── */
+  .section { background:white; border:1px solid var(--border); border-radius:16px; padding:28px; margin-bottom:28px; }
+  .section h2 { font-size:1.15rem; font-weight:700; margin-bottom:20px; display:flex; align-items:center; gap:10px; }
+  .section h2::before { content:''; display:block; width:4px; height:20px; background:var(--teal); border-radius:2px; }
+
+  /* ── confusion matrix ── */
+  .matrix-wrap { overflow-x:auto; }
+  table.confusion { border-collapse:collapse; width:100%; font-size:.88rem; }
+  table.confusion th, table.confusion td { padding:10px 12px; text-align:center; }
+  .corner { background:var(--bg); font-size:.78rem; color:var(--light); }
+  .col-label { background:var(--teal-pale); color:var(--teal); font-weight:700; font-size:.8rem; white-space:nowrap; }
+  .row-label { background:var(--teal-pale); color:var(--teal); font-weight:700; font-size:.8rem; text-align:left; white-space:nowrap; }
+  table.confusion td { border:1px solid var(--border); min-width:64px; font-size:.95rem; }
+  .cell-pct { font-size:.7rem; color:var(--mid); margin-top:2px; }
+
+  /* ── per-class bars ── */
+  table.cls-table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  table.cls-table th { text-align:left; padding:8px 12px; background:var(--bg); color:var(--light); font-weight:600; font-size:.78rem; border-bottom:1px solid var(--border); }
+  table.cls-table td { padding:10px 12px; border-bottom:1px solid var(--border); }
+  .cls-name { font-weight:700; color:var(--dark); width:110px; }
+  .bar-cell { width:40%; }
+  .bar-bg { background:var(--border); border-radius:4px; height:10px; }
+  .bar-fill { height:10px; border-radius:4px; transition:width .5s; }
+  .num { text-align:center; color:var(--mid); }
+
+  /* ── misclassifications ── */
+  .wrong-section { margin-bottom:24px; }
+  .wrong-section h4 { font-size:.95rem; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .cls-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+  table.wrong-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+  table.wrong-table th { background:var(--bg); padding:7px 12px; text-align:left; color:var(--light); font-size:.78rem; border-bottom:1px solid var(--border); }
+  table.wrong-table td { padding:7px 12px; border-bottom:1px solid var(--border); }
+  .fname { color:var(--mid); font-family:monospace; font-size:.76rem; }
+  .pred-tag { background:var(--teal-pale); color:var(--teal); padding:2px 8px; border-radius:12px; font-size:.8rem; font-weight:600; }
+
+  footer { text-align:center; padding:32px; color:var(--light); font-size:.82rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">
+    <svg width="26" height="26" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>
+  </div>
+  <div>
+    <h1>BrainScope AI — Test Report</h1>
+    <p>Model: brain-djpb5/3 &nbsp;|&nbsp; Dataset: diagnoct &nbsp;|&nbsp; Split: test &nbsp;|&nbsp; Generated: 2026-05-26 16:59</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- stat cards -->
+  <div class="stat-cards">
+    <div class="stat-card">
+      <div class="val">96.64%</div>
+      <div class="lbl">Overall Accuracy</div>
+    </div>
+    <div class="stat-card">
+      <div class="val">1339</div>
+      <div class="lbl">Test Images</div>
+    </div>
+    <div class="stat-card">
+      <div class="val">6</div>
+      <div class="lbl">Classes</div>
+    </div>
+    <div class="stat-card">
+      <div class="val">45</div>
+      <div class="lbl">Misclassified</div>
+    </div>
+  </div>
+
+  <!-- confusion matrix -->
+  <div class="section">
+    <h2>Confusion Matrix</h2>
+    <p style="color:var(--mid);font-size:.85rem;margin-bottom:16px">Rows = Actual &nbsp;|&nbsp; Columns = Predicted &nbsp;|&nbsp; Green diagonal = correct &nbsp;|&nbsp; Red off-diagonal = errors</p>
+    <div class="matrix-wrap">
+      <table class="confusion">
+        <thead>
+          <tr>
+            <th class="corner">Actual \ Predicted</th>
+            <th class='col-label'>bleeding</th><th class='col-label'>glioma</th><th class='col-label'>ischemia</th><th class='col-label'>meningioma</th><th class='col-label'>normal</th><th class='col-label'>pituitary</th>
+          </tr>
+        </thead>
+        <tbody><tr><th class='row-label'>bleeding</th><td style="background:rgb(146,247,247);font-weight:700;">97<div class="cell-pct">91%</div></td><td style="background:#f8fffe;">0</td><td style="background:rgb(255,205,205);">4<div class="cell-pct">4%</div></td><td style="background:#f8fffe;">0</td><td style="background:rgb(255,197,197);">5<div class="cell-pct">5%</div></td><td style="background:#f8fffe;">0</td></tr><tr><th class='row-label'>glioma</th><td style="background:#f8fffe;">0</td><td style="background:rgb(138,252,252);font-weight:700;">283<div class="cell-pct">97%</div></td><td style="background:#f8fffe;">0</td><td style="background:rgb(255,210,210);">9<div class="cell-pct">3%</div></td><td style="background:#f8fffe;">0</td><td style="background:#f8fffe;">0</td></tr><tr><th class='row-label'>ischemia</th><td style="background:rgb(255,191,191);">6<div class="cell-pct">5%</div></td><td style="background:#f8fffe;">0</td><td style="background:rgb(150,245,245);font-weight:700;">97<div class="cell-pct">87%</div></td><td style="background:#f8fffe;">0</td><td style="background:rgb(255,177,177);">8<div class="cell-pct">7%</div></td><td style="background:#f8fffe;">0</td></tr><tr><th class='row-label'>meningioma</th><td style="background:rgb(255,230,230);">1<div class="cell-pct">1%</div></td><td style="background:rgb(255,221,221);">3<div class="cell-pct">2%</div></td><td style="background:#f8fffe;">0</td><td style="background:rgb(138,252,252);font-weight:700;">172<div class="cell-pct">97%</div></td><td style="background:#f8fffe;">0</td><td style="background:rgb(255,230,230);">1<div class="cell-pct">1%</div></td></tr><tr><th class='row-label'>normal</th><td style="background:rgb(255,233,233);">1<div class="cell-pct">0%</div></td><td style="background:#f8fffe;">0</td><td style="background:rgb(255,227,227);">4<div class="cell-pct">1%</div></td><td style="background:#f8fffe;">0</td><td style="background:rgb(136,254,254);font-weight:700;">437<div class="cell-pct">99%</div></td><td style="background:#f8fffe;">0</td></tr><tr><th class='row-label'>pituitary</th><td style="background:#f8fffe;">0</td><td style="background:#f8fffe;">0</td><td style="background:#f8fffe;">0</td><td style="background:rgb(255,227,227);">2<div class="cell-pct">1%</div></td><td style="background:#f8fffe;">0</td><td style="background:rgb(136,254,254);font-weight:700;">208<div class="cell-pct">99%</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- per-class metrics -->
+  <div class="section">
+    <h2>Per-Class Metrics</h2>
+    <table class="cls-table">
+      <thead>
+        <tr>
+          <th>Class</th><th>Accuracy</th><th></th>
+          <th>Correct/Total</th><th>Precision</th><th>Recall</th><th>F1</th>
+        </tr>
+      </thead>
+      <tbody>
+    <tr>
+      <td class="cls-name">bleeding</td>
+      <td class="bar-cell">
+        <div class="bar-bg">
+          <div class="bar-fill" style="width:90.7%;background:#F59E0B"></div>
+        </div>
+      </td>
+      <td class="num">90.7%</td>
+      <td class="num">97/107</td>
+      <td class="num">92.4%</td>
+      <td class="num">90.7%</td>
+      <td class="num">91.5</td>
+    </tr>
+    <tr>
+      <td class="cls-name">glioma</td>
+      <td class="bar-cell">
+        <div class="bar-bg">
+          <div class="bar-fill" style="width:96.9%;background:#0EA5A0"></div>
+        </div>
+      </td>
+      <td class="num">96.9%</td>
+      <td class="num">283/292</td>
+      <td class="num">99.0%</td>
+      <td class="num">96.9%</td>
+      <td class="num">97.9</td>
+    </tr>
+    <tr>
+      <td class="cls-name">ischemia</td>
+      <td class="bar-cell">
+        <div class="bar-bg">
+          <div class="bar-fill" style="width:87.4%;background:#F59E0B"></div>
+        </div>
+      </td>
+      <td class="num">87.4%</td>
+      <td class="num">97/111</td>
+      <td class="num">92.4%</td>
+      <td class="num">87.4%</td>
+      <td class="num">89.8</td>
+    </tr>
+    <tr>
+      <td class="cls-name">meningioma</td>
+      <td class="bar-cell">
+        <div class="bar-bg">
+          <div class="bar-fill" style="width:97.2%;background:#0EA5A0"></div>
+        </div>
+      </td>
+      <td class="num">97.2%</td>
+      <td class="num">172/177</td>
+      <td class="num">94.0%</td>
+      <td class="num">97.2%</td>
+      <td class="num">95.6</td>
+    </tr>
+    <tr>
+      <td class="cls-name">normal</td>
+      <td class="bar-cell">
+        <div class="bar-bg">
+          <div class="bar-fill" style="width:98.9%;background:#0EA5A0"></div>
+        </div>
+      </td>
+      <td class="num">98.9%</td>
+      <td class="num">437/442</td>
+      <td class="num">97.1%</td>
+      <td class="num">98.9%</td>
+      <td class="num">98.0</td>
+    </tr>
+    <tr>
+      <td class="cls-name">pituitary</td>
+      <td class="bar-cell">
+        <div class="bar-bg">
+          <div class="bar-fill" style="width:99.0%;background:#0EA5A0"></div>
+        </div>
+      </td>
+      <td class="num">99.0%</td>
+      <td class="num">208/210</td>
+      <td class="num">99.5%</td>
+      <td class="num">99.0%</td>
+      <td class="num">99.3</td>
+    </tr></tbody>
+    </table>
+  </div>
+
+  <!-- misclassifications -->
+  <div class="section">
+    <h2>Misclassified Images</h2>
+    
+    <div class="wrong-section">
+      <h4><span class="cls-dot" style="background:var(--bleeding)"></span>
+        bleeding — 10 misclassified / 107 total
+      </h4>
+      <table class="wrong-table">
+        <thead><tr><th>File</th><th>Predicted as</th><th>Confidence</th></tr></thead>
+        <tbody><tr>
+          <td class="fname">10222_png.rf.cc6193099aa8ba8ccdaa52cb91fa81da.jpg</td>
+          <td><span class="pred-tag">normal</span></td>
+          <td style="color:#EF4444;font-weight:600">99.8%</td>
+        </tr><tr>
+          <td class="fname">12262_png.rf.3b7d1910bc71aeb71214d656ee5ea0ad.jpg</td>
+          <td><span class="pred-tag">(no response)</span></td>
+          <td style="color:#F59E0B;font-weight:600">0.0%</td>
+        </tr><tr>
+          <td class="fname">13066_png.rf.19b4fc66c20db541ab84d419f6e1b798.jpg</td>
+          <td><span class="pred-tag">normal</span></td>
+          <td style="color:#EF4444;font-weight:600">93.7%</td>
+        </tr><tr>
+          <td class="fname">13321_png.rf.b75a1bb692b6e77836b319a40813680c.jpg</td>
+          <td><span class="pred-tag">ischemia</span></td>
+          <td style="color:#EF4444;font-weight:600">70.3%</td>
+        </tr><tr>
+          <td class="fname">13607_png.rf.b635a3af10f02f3a7f3d400636ca333a.jpg</td>
+          <td><span class="pred-tag">ischemia</span></td>
+          <td style="color:#EF4444;font-weight:600">95.0%</td>
+        </tr><tr>
+          <td class="fname">14386_png.rf.f2e0d345d2e4688174ee459765360f90.jpg</td>
+          <td><span class="pred-tag">normal</span></td>
+          <td style="color:#EF4444;font-weight:600">97.7%</td>
+        </tr><tr>
+          <td class="fname">14889_png.rf.d6dd840e67d594fd15bc96b9be9b938e.jpg</td>
+          <td><span class="pred-tag">ischemia</span></td>
+          <td style="color:#F59E0B;font-weight:600">57.4%</td>
+        </tr><tr>
+          <td class="fname">15313_png.rf.f61aec28f68fcaf642dc341f75018282.jpg</td>
+          <td><span class="pred-tag">normal</span></td>
+          <td style="color:#EF4444;font-weight:600">100.0%</td>
+        </tr><tr>
+          <td class="fname">15819_png.rf.05988feadf9f7414f75e9d501cceb342.jpg</td>
+          <td><span class="pred-tag">normal</span></td>
+          <td style="color:#EF4444;font-weight:600">99.7%</td>
+        </tr><tr>
+          <td class="fname">16501_png.rf.c4cbf0804bef410255b4888926390d95.jpg</td>
+          <td><span class="pred-tag">ischemia</span></td>
+          <td style="color:#F59E0B;font-weight:600">56.1%</td>
+        </tr></tbody>
+      </table>
+    </div>
+    <div class="wrong-section">
+      <h4><span class="cls-dot" style="background:var(--glioma)"></span>
+        glioma — 9 misclassified / 292 total
+      </h4>
+      <table class="wrong-table">
+        <thead><tr><th>File</th><th>Predicted as</th><th>Confidence</th></tr></thead>
+        <tbody><tr>
+          <td class="fname">gg-501-_jpg.rf.5f2c0542c043b5be3a13411f9486e24a.jpg</td>
+          <td><span class="pred-tag">meningioma</span></td>
+          <td style="color:#EF4444;font-weight:600">84.7%</td>
+        </tr><tr>
+          <td class="fname">G_723_HF__jpg.rf.dc07bb8edbe3f2dd464a96668071ea9c.jpg</td>
+          <td><span class="pred-tag">meningioma</span></td>
+          <td style="color:#EF4444;font-weight:600">100.0%</td>
+        </tr><tr>
+          <td class="fname">image-13-_jpg.rf.40d07125a741eee0926fda39a7443fa1.jpg</td>
+          <td><span class="pred-tag">meningioma</span></td>
+          <td style="color:#EF4444;font-weight:600">98.0%</td>
+        </tr><tr>
+          <td class="fname">image-14-_jpg.rf.ec46f58659bff325f2ab518bcb911166.jpg</td>
+          <td><span class="pred-tag">meningioma</span></td>
+          <td style="color:#EF4444;font-weight:600">99.5%</td>
+        </tr><tr>
+          <td class="fname">image-30-_jpg.rf.c38b34735fb5bc48c14dd3500469b551.jpg</td>
+          <td><span class="pred-tag">meningioma</span></td>
+          <td style="color:#EF4444;font-weight:600">99.8%</td>
+        </tr><tr>
+          <td class="fname">image-54-_jpg.rf.b96f34171e34d7589334e948430f491c.jpg</td>
+          <td><span class="pred-tag">meningioma</span></td>
+          <td style="color:#EF4444;font-weight:600">100.0%</td>
+        </tr><tr>
+          <td class="fname">image-85-_jpg.rf.16b6d64b661bec461918b6ab2fbfe8f2.jpg</td>
+          <td><span class="pred-tag">meningioma</span></td>
+          <td style="color:#EF4444;font-weight:600">89.8%</td>
+        </tr><tr>
+          <td class="fname">Tr-gl_1169_jpg.rf.cc70177b8cc9389ac8207cfbd98e4c0c.jpg</td>
+          <td><span class="pred-tag">meningioma</span></td>
+          <td style="color:#F59E0B;font-weight:600">63.5%</td>
+        </tr><tr>
+          <td class="fname">Tr-gl_1212_jpg.rf.498ea321cded1b78f92ed64539e58d02.jpg</td>
+          <td><span class="pred-tag">meningioma</span></td>
+          <td style="color:#EF4444;font-weight:600">100.0%</td>
+        </tr></tbody>
+      </table>
+    </div>
+    <div class="wrong-section">
+      <h4><span class="cls-dot" style="background:var(--ischemia)"></span>
+        ischemia — 14 misclassified / 111 total
+      </h4>
+      <table class="wrong-table">
+        <thead><tr><th>File</th><th>Predicted as</th><th>Confidence</th></tr></thead>
+        <tbody><tr>
+          <td class="fname">10682_png.rf.0270dda50a2f5452ca54f850c54a7c3a.jpg</td>
+          <td><span class="pred-tag">normal</span></td>
+          <td style="color:#EF4444;font-weight:600">92.9%</td>
+        </tr><tr>
+          <td class="fname">11282_png.rf.285d851aca48f94169097b4d7e307d47.jpg</td>
+          <td><span class="pred-tag">normal</span></td>
+          <td style="color:#EF4444;font-weight:600">92.3%</td>
+        </tr><tr>
+          <td class="fname">11485_png.rf.bd2a94a87b099ea780ba12fb5fb39dc1.jpg</td>
+          <td><span class="pred-tag">normal</span></td>
+          <td style="color:#F59E0B;font-weight:600">69.3%</td>
+        </tr><tr>
+          <td class="fname">12912_png.rf.71df04781fb07943bfb6be1522483c51.jpg</td>
+          <td><span class="pred-tag">normal</span></td>
+          <td style="color:#EF4444;font-weight:600">78.0%</td>
+        </tr><tr>
+          <td class="fname">13945_png.rf.29128daaddc1e7be1576b5a9949f6cda.jpg</td>
+          <td><span class="pred-tag">bleeding</span></td>
+          <td style="color:#EF4444;font-weight:600">82.2%</td>
+        </tr><tr>
+          <td class="fname">14078_png.rf.7efd6a72435cc843d99516bf113c9de6.jpg</td>
+          <td><span class="pred-tag">bleeding</span></td>
+          <td style="color:#EF4444;font-weight:600">98.3%</td>
+        </tr><tr>
+          <td class="fname">14208_png.rf.5768a1f68d8c2baa499408cf46c1042a.jpg</td>
+          <td><span class="pred-tag">normal</span></td>
+          <td style="color:#EF4444;font-weight:600">99.7%</td>
+        </tr><tr>
+          <td class="fname">14323_png.rf.d97e3a75bde5e9621a6ee40cbb2eb96b.jpg</td>
+          <td><span class="pred-tag">normal</span></td>
+          <td style="color:#F59E0B;font-weight:600">53.4%</td>
+        </tr><tr>
+          <td class="fname">14631_png.rf.ef99ed7b75fdae3210148574e3cef47a.jpg</td>
+          <td><span class="pred-tag">bleeding</span></td>
+          <td style="color:#EF4444;font-weight:600">100.0%</td>
+        </tr><tr>
+          <td class="fname">15348_png.rf.aaae0d6e6eadd998b592dfc3c6293c45.jpg</td>
+          <td><span class="pred-tag">bleeding</span></td>
+          <td style="color:#EF4444;font-weight:600">71.8%</td>
+        </tr><tr>
+          <td class="fname">15640_png.rf.32dc8c6000193ce26a4a32bae54c79da.jpg</td>
+          <td><span class="pred-tag">normal</span></td>
+          <td style="color:#F59E0B;font-weight:600">57.1%</td>
+        </tr><tr>
+          <td class="fname">15754_png.rf.cd87eae3e431ff5158f199adb3c9fecc.jpg</td>
+          <td><span class="pred-tag">bleeding</span></td>
+          <td style="color:#EF4444;font-weight:600">99.6%</td>
+        </tr><tr>
+          <td class="fname">16683_png.rf.57b567f099ee2f62d84e42215977c30f.jpg</td>
+          <td><span class="pred-tag">bleeding</span></td>
+          <td style="color:#F59E0B;font-weight:600">45.6%</td>
+        </tr><tr>
+          <td class="fname">16781_png.rf.00d32086bd54991b85f06ab62d946211.jpg</td>
+          <td><span class="pred-tag">normal</span></td>
+          <td style="color:#EF4444;font-weight:600">81.4%</td>
+        </tr></tbody>
+      </table>
+    </div>
+    <div class="wrong-section">
+      <h4><span class="cls-dot" style="background:var(--meningioma)"></span>
+        meningioma — 5 misclassified / 177 total
+      </h4>
+      <table class="wrong-table">
+        <thead><tr><th>File</th><th>Predicted as</th><th>Confidence</th></tr></thead>
+        <tbody><tr>
+          <td class="fname">1350_jpg.rf.48b156ece56dd9ce15ce3c67757762a7.jpg</td>
+          <td><span class="pred-tag">glioma</span></td>
+          <td style="color:#EF4444;font-weight:600">97.5%</td>
+        </tr><tr>
+          <td class="fname">Tr-me_0171_jpg.rf.30c1a3a96be48236fcd953d8b73e51ae.jpg</td>
+          <td><span class="pred-tag">glioma</span></td>
+          <td style="color:#EF4444;font-weight:600">83.3%</td>
+        </tr><tr>
+          <td class="fname">Tr-me_0182_jpg.rf.b0ce6b6f41c2e0affbb60108585e46fd.jpg</td>
+          <td><span class="pred-tag">bleeding</span></td>
+          <td style="color:#F59E0B;font-weight:600">60.7%</td>
+        </tr><tr>
+          <td class="fname">Tr-me_0942_jpg.rf.76fc8228966cb4b1486b9fda8e380081.jpg</td>
+          <td><span class="pred-tag">pituitary</span></td>
+          <td style="color:#EF4444;font-weight:600">100.0%</td>
+        </tr><tr>
+          <td class="fname">Tr-me_0956_jpg.rf.57a623e9c9023afbda71ae9579115f3c.jpg</td>
+          <td><span class="pred-tag">glioma</span></td>
+          <td style="color:#EF4444;font-weight:600">99.0%</td>
+        </tr></tbody>
+      </table>
+    </div>
+    <div class="wrong-section">
+      <h4><span class="cls-dot" style="background:var(--normal)"></span>
+        normal — 5 misclassified / 442 total
+      </h4>
+      <table class="wrong-table">
+        <thead><tr><th>File</th><th>Predicted as</th><th>Confidence</th></tr></thead>
+        <tbody><tr>
+          <td class="fname">11186_png.rf.a1b8ee64db68f86913c057db3501e8af.jpg</td>
+          <td><span class="pred-tag">bleeding</span></td>
+          <td style="color:#EF4444;font-weight:600">84.7%</td>
+        </tr><tr>
+          <td class="fname">11463_png.rf.343935cbe2749f5a67e1fbc5a701d78c.jpg</td>
+          <td><span class="pred-tag">ischemia</span></td>
+          <td style="color:#EF4444;font-weight:600">90.2%</td>
+        </tr><tr>
+          <td class="fname">11825_png.rf.ae43e3a76a4df2f348faddbe6e1fb126.jpg</td>
+          <td><span class="pred-tag">ischemia</span></td>
+          <td style="color:#EF4444;font-weight:600">75.0%</td>
+        </tr><tr>
+          <td class="fname">14260_png.rf.654ed2e832ded069fee4ceb14058263a.jpg</td>
+          <td><span class="pred-tag">ischemia</span></td>
+          <td style="color:#EF4444;font-weight:600">81.9%</td>
+        </tr><tr>
+          <td class="fname">15926_png.rf.5fa412804487632855d40ea1f4315f83.jpg</td>
+          <td><span class="pred-tag">ischemia</span></td>
+          <td style="color:#EF4444;font-weight:600">85.7%</td>
+        </tr></tbody>
+      </table>
+    </div>
+    <div class="wrong-section">
+      <h4><span class="cls-dot" style="background:var(--pituitary)"></span>
+        pituitary — 2 misclassified / 210 total
+      </h4>
+      <table class="wrong-table">
+        <thead><tr><th>File</th><th>Predicted as</th><th>Confidence</th></tr></thead>
+        <tbody><tr>
+          <td class="fname">P_836_HF__jpg.rf.d443b7a09f9c048ce23c5a118801043b.jpg</td>
+          <td><span class="pred-tag">meningioma</span></td>
+          <td style="color:#EF4444;font-weight:600">97.9%</td>
+        </tr><tr>
+          <td class="fname">Tr-pi_1221_jpg.rf.db747f51fdc15d31b6852442d85e3261.jpg</td>
+          <td><span class="pred-tag">meningioma</span></td>
+          <td style="color:#F59E0B;font-weight:600">64.4%</td>
+        </tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer>BrainScope AI Test Report &nbsp;|&nbsp; Model brain-djpb5/3 &nbsp;|&nbsp; CC BY 4.0</footer>
+</body>
+</html>

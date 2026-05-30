@@ -1,0 +1,266 @@
+{
+  "overall_accuracy": 96.64,
+  "per_class": {
+    "bleeding": {
+      "correct": 97,
+      "total": 107,
+      "wrong": [
+        {
+          "file": "10222_png.rf.cc6193099aa8ba8ccdaa52cb91fa81da.jpg",
+          "predicted": "normal",
+          "confidence": 99.8
+        },
+        {
+          "file": "12262_png.rf.3b7d1910bc71aeb71214d656ee5ea0ad.jpg",
+          "predicted": "",
+          "confidence": 0.0
+        },
+        {
+          "file": "13066_png.rf.19b4fc66c20db541ab84d419f6e1b798.jpg",
+          "predicted": "normal",
+          "confidence": 93.7
+        },
+        {
+          "file": "13321_png.rf.b75a1bb692b6e77836b319a40813680c.jpg",
+          "predicted": "ischemia",
+          "confidence": 70.3
+        },
+        {
+          "file": "13607_png.rf.b635a3af10f02f3a7f3d400636ca333a.jpg",
+          "predicted": "ischemia",
+          "confidence": 95.0
+        },
+        {
+          "file": "14386_png.rf.f2e0d345d2e4688174ee459765360f90.jpg",
+          "predicted": "normal",
+          "confidence": 97.7
+        },
+        {
+          "file": "14889_png.rf.d6dd840e67d594fd15bc96b9be9b938e.jpg",
+          "predicted": "ischemia",
+          "confidence": 57.4
+        },
+        {
+          "file": "15313_png.rf.f61aec28f68fcaf642dc341f75018282.jpg",
+          "predicted": "normal",
+          "confidence": 100.0
+        },
+        {
+          "file": "15819_png.rf.05988feadf9f7414f75e9d501cceb342.jpg",
+          "predicted": "normal",
+          "confidence": 99.7
+        },
+        {
+          "file": "16501_png.rf.c4cbf0804bef410255b4888926390d95.jpg",
+          "predicted": "ischemia",
+          "confidence": 56.1
+        }
+      ]
+    },
+    "glioma": {
+      "correct": 283,
+      "total": 292,
+      "wrong": [
+        {
+          "file": "gg-501-_jpg.rf.5f2c0542c043b5be3a13411f9486e24a.jpg",
+          "predicted": "meningioma",
+          "confidence": 84.7
+        },
+        {
+          "file": "G_723_HF__jpg.rf.dc07bb8edbe3f2dd464a96668071ea9c.jpg",
+          "predicted": "meningioma",
+          "confidence": 100.0
+        },
+        {
+          "file": "image-13-_jpg.rf.40d07125a741eee0926fda39a7443fa1.jpg",
+          "predicted": "meningioma",
+          "confidence": 98.0
+        },
+        {
+          "file": "image-14-_jpg.rf.ec46f58659bff325f2ab518bcb911166.jpg",
+          "predicted": "meningioma",
+          "confidence": 99.5
+        },
+        {
+          "file": "image-30-_jpg.rf.c38b34735fb5bc48c14dd3500469b551.jpg",
+          "predicted": "meningioma",
+          "confidence": 99.8
+        },
+        {
+          "file": "image-54-_jpg.rf.b96f34171e34d7589334e948430f491c.jpg",
+          "predicted": "meningioma",
+          "confidence": 100.0
+        },
+        {
+          "file": "image-85-_jpg.rf.16b6d64b661bec461918b6ab2fbfe8f2.jpg",
+          "predicted": "meningioma",
+          "confidence": 89.8
+        },
+        {
+          "file": "Tr-gl_1169_jpg.rf.cc70177b8cc9389ac8207cfbd98e4c0c.jpg",
+          "predicted": "meningioma",
+          "confidence": 63.5
+        },
+        {
+          "file": "Tr-gl_1212_jpg.rf.498ea321cded1b78f92ed64539e58d02.jpg",
+          "predicted": "meningioma",
+          "confidence": 100.0
+        }
+      ]
+    },
+    "ischemia": {
+      "correct": 97,
+      "total": 111,
+      "wrong": [
+        {
+          "file": "10682_png.rf.0270dda50a2f5452ca54f850c54a7c3a.jpg",
+          "predicted": "normal",
+          "confidence": 92.9
+        },
+        {
+          "file": "11282_png.rf.285d851aca48f94169097b4d7e307d47.jpg",
+          "predicted": "normal",
+          "confidence": 92.3
+        },
+        {
+          "file": "11485_png.rf.bd2a94a87b099ea780ba12fb5fb39dc1.jpg",
+          "predicted": "normal",
+          "confidence": 69.3
+        },
+        {
+          "file": "12912_png.rf.71df04781fb07943bfb6be1522483c51.jpg",
+          "predicted": "normal",
+          "confidence": 78.0
+        },
+        {
+          "file": "13945_png.rf.29128daaddc1e7be1576b5a9949f6cda.jpg",
+          "predicted": "bleeding",
+          "confidence": 82.2
+        },
+        {
+          "file": "14078_png.rf.7efd6a72435cc843d99516bf113c9de6.jpg",
+          "predicted": "bleeding",
+          "confidence": 98.3
+        },
+        {
+          "file": "14208_png.rf.5768a1f68d8c2baa499408cf46c1042a.jpg",
+          "predicted": "normal",
+          "confidence": 99.7
+        },
+        {
+          "file": "14323_png.rf.d97e3a75bde5e9621a6ee40cbb2eb96b.jpg",
+          "predicted": "normal",
+          "confidence": 53.4
+        },
+        {
+          "file": "14631_png.rf.ef99ed7b75fdae3210148574e3cef47a.jpg",
+          "predicted": "bleeding",
+          "confidence": 100.0
+        },
+        {
+          "file": "15348_png.rf.aaae0d6e6eadd998b592dfc3c6293c45.jpg",
+          "predicted": "bleeding",
+          "confidence": 71.8
+        },
+        {
+          "file": "15640_png.rf.32dc8c6000193ce26a4a32bae54c79da.jpg",
+          "predicted": "normal",
+          "confidence": 57.1
+        },
+        {
+          "file": "15754_png.rf.cd87eae3e431ff5158f199adb3c9fecc.jpg",
+          "predicted": "bleeding",
+          "confidence": 99.6
+        },
+        {
+          "file": "16683_png.rf.57b567f099ee2f62d84e42215977c30f.jpg",
+          "predicted": "bleeding",
+          "confidence": 45.6
+        },
+        {
+          "file": "16781_png.rf.00d32086bd54991b85f06ab62d946211.jpg",
+          "predicted": "normal",
+          "confidence": 81.4
+        }
+      ]
+    },
+    "meningioma": {
+      "correct": 172,
+      "total": 177,
+      "wrong": [
+        {
+          "file": "1350_jpg.rf.48b156ece56dd9ce15ce3c67757762a7.jpg",
+          "predicted": "glioma",
+          "confidence": 97.5
+        },
+        {
+          "file": "Tr-me_0171_jpg.rf.30c1a3a96be48236fcd953d8b73e51ae.jpg",
+          "predicted": "glioma",
+          "confidence": 83.3
+        },
+        {
+          "file": "Tr-me_0182_jpg.rf.b0ce6b6f41c2e0affbb60108585e46fd.jpg",
+          "predicted": "bleeding",
+          "confidence": 60.7
+        },
+        {
+          "file": "Tr-me_0942_jpg.rf.76fc8228966cb4b1486b9fda8e380081.jpg",
+          "predicted": "pituitary",
+          "confidence": 100.0
+        },
+        {
+          "file": "Tr-me_0956_jpg.rf.57a623e9c9023afbda71ae9579115f3c.jpg",
+          "predicted": "glioma",
+          "confidence": 99.0
+        }
+      ]
+    },
+    "normal": {
+      "correct": 437,
+      "total": 442,
+      "wrong": [
+        {
+          "file": "11186_png.rf.a1b8ee64db68f86913c057db3501e8af.jpg",
+          "predicted": "bleeding",
+          "confidence": 84.7
+        },
+        {
+          "file": "11463_png.rf.343935cbe2749f5a67e1fbc5a701d78c.jpg",
+          "predicted": "ischemia",
+          "confidence": 90.2
+        },
+        {
+          "file": "11825_png.rf.ae43e3a76a4df2f348faddbe6e1fb126.jpg",
+          "predicted": "ischemia",
+          "confidence": 75.0
+        },
+        {
+          "file": "14260_png.rf.654ed2e832ded069fee4ceb14058263a.jpg",
+          "predicted": "ischemia",
+          "confidence": 81.9
+        },
+        {
+          "file": "15926_png.rf.5fa412804487632855d40ea1f4315f83.jpg",
+          "predicted": "ischemia",
+          "confidence": 85.7
+        }
+      ]
+    },
+    "pituitary": {
+      "correct": 208,
+      "total": 210,
+      "wrong": [
+        {
+          "file": "P_836_HF__jpg.rf.d443b7a09f9c048ce23c5a118801043b.jpg",
+          "predicted": "meningioma",
+          "confidence": 97.9
+        },
+        {
+          "file": "Tr-pi_1221_jpg.rf.db747f51fdc15d31b6852442d85e3261.jpg",
+          "predicted": "meningioma",
+          "confidence": 64.4
+        }
+      ]
+    }
+  }
+}
