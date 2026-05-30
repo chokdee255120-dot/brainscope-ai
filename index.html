@@ -1270,7 +1270,7 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
-  const WORKFLOW_URL = 'https://detect.roboflow.com/infer/workflows/fire-cjxu1/find-glioma-and-brainscope-ai';
+  const INFER_URL = 'https://detect.roboflow.com/find-glioma-and-brainscope-ai/2';
   const ROBOFLOW_KEY = 'CXCNe93GGPiEeF2XrcYE';
 
   const COLORS = ['#0EA5A0','#F59E0B','#EF4444','#8B5CF6','#10B981','#F97316','#3B82F6'];
@@ -1288,20 +1288,16 @@
       const base64 = await toBase64(currentFile);
       const imageData = base64.split(',')[1];
 
-      const response = await fetch(WORKFLOW_URL, {
+      const response = await fetch(`${INFER_URL}?api_key=${ROBOFLOW_KEY}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          api_key: ROBOFLOW_KEY,
-          inputs: { image: { type: 'base64', value: imageData } }
-        })
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: imageData
       });
 
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const result = await response.json();
 
-      // Workflows API returns nested: outputs[0].predictions.predictions
-      const predictions = result?.outputs?.[0]?.predictions?.predictions || [];
+      const predictions = result?.predictions || [];
 
       document.getElementById('loadingState').classList.remove('show');
       displayResults({ predictions });
