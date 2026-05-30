@@ -1442,7 +1442,7 @@
       // Label background
       const fontSize = Math.max(14, natW / 40);
       ctx.font = `bold ${fontSize}px sans-serif`;
-      const label = `${p.class}  ${conf}%`;
+      const label = `${CLASS_MAP[String(p.class)] || CLASS_MAP[String(p.class_id)] || p.class}  ${conf}%`;
       const tw = ctx.measureText(label).width + 16;
       const th = fontSize + 10;
       ctx.fillStyle = color;
