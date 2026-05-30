@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrainScope AI — Brain CT Scan Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #0EA5A0;
+    --teal-dark: #0b8a85;
+    --teal-light: #5ECFCA;
+    --teal-pale: #E6F7F7;
+    --bg: #F8FFFE;
+    --dark: #0D1F2D;
+    --mid: #3D5A6B;
+    --light: #8AA8B8;
+    --white: #ffffff;
+    --card-bg: #ffffff;
+    --border: #E2EEF0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'IBM Plex Sans Thai', 'Sarabun', sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(248,255,254,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 5%;
+    height: 64px;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700; font-size: 1.2rem; color: var(--dark);
+    text-decoration: none;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--teal), var(--teal-light));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .logo-icon svg { width: 20px; height: 20px; }
+
+  .nav-links {
+    display: flex; gap: 2rem; list-style: none;
+  }
+
+  .nav-links a {
+    text-decoration: none; color: var(--mid);
+    font-size: 0.9rem; font-weight: 500;
+    transition: color .2s;
+  }
+
+  .nav-links a:hover { color: var(--teal); }
+
+  .nav-actions { display: flex; gap: 12px; align-items: center; }
+
+  .nav-analyze-btn {
+    padding: 9px 20px; border-radius: 8px;
+    background: transparent; color: var(--teal);
+    border: 1.5px solid var(--teal);
+    font-family: inherit; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+  }
+
+  .nav-analyze-btn:hover, .nav-analyze-btn.active {
+    background: var(--teal); color: white;
+  }
+
+  .btn-ghost {
+    padding: 8px 18px; border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: transparent; color: var(--mid);
+    font-family: inherit; font-size: 0.88rem; font-weight: 500;
+    cursor: pointer; transition: all .2s;
+  }
+
+  .btn-ghost:hover { border-color: var(--teal); color: var(--teal); }
+
+  .btn-primary {
+    padding: 9px 20px; border-radius: 8px;
+    background: var(--teal); color: white; border: none;
+    font-family: inherit; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+  }
+
+  .btn-primary:hover { background: var(--teal-dark); transform: translateY(-1px); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    padding: 100px 5% 60px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 60px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px; right: -200px;
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(14,165,160,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--teal-pale); border: 1px solid rgba(14,165,160,0.25);
+    border-radius: 50px; padding: 6px 14px;
+    font-size: 0.8rem; font-weight: 600; color: var(--teal);
+    margin-bottom: 24px;
+  }
+
+  .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); animation: pulse 2s infinite; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  .hero h1 {
+    font-size: clamp(2.4rem, 4vw, 3.4rem);
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 20px;
+    color: var(--dark);
+  }
+
+  .hero h1 .accent { color: var(--teal); }
+
+  .hero-desc {
+    font-size: 1.05rem; color: var(--mid);
+    line-height: 1.75; margin-bottom: 36px;
+    max-width: 480px;
+  }
+
+  .hero-btns { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+
+  .btn-large {
+    padding: 14px 28px; border-radius: 10px;
+    background: var(--teal); color: white; border: none;
+    font-family: inherit; font-size: 1rem; font-weight: 600;
+    cursor: pointer; transition: all .25s;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .btn-large:hover { background: var(--teal-dark); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(14,165,160,0.3); }
+
+  .btn-outline-large {
+    padding: 14px 28px; border-radius: 10px;
+    background: transparent; color: var(--mid);
+    border: 1.5px solid var(--border);
+    font-family: inherit; font-size: 1rem; font-weight: 500;
+    cursor: pointer; transition: all .25s;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .btn-outline-large:hover { border-color: var(--teal); color: var(--teal); }
+
+  .hero-stats {
+    display: flex; gap: 36px; margin-top: 48px;
+  }
+
+  .stat-item { }
+
+  .stat-value {
+    font-size: 1.9rem; font-weight: 800; color: var(--dark);
+  }
+
+  .stat-label {
+    font-size: 0.82rem; color: var(--light); margin-top: 2px;
+  }
+
+  /* ── HERO CARD (right side) ── */
+  .hero-visual {
+    position: relative;
+  }
+
+  .analysis-card {
+    background: var(--dark);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(13,31,45,0.25);
+    animation: float 5s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .card-titlebar {
+    background: rgba(255,255,255,0.05);
+    padding: 12px 18px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-red { background: #FF5F57; }
+  .dot-yellow { background: #FFBD2E; }
+  .dot-green { background: #28C940; }
+
+  .card-title-text {
+    margin-left: 8px;
+    font-size: 0.85rem; color: rgba(255,255,255,0.6);
+  }
+
+  .ai-badge-card {
+    margin-left: auto;
+    background: var(--teal); color: white;
+    font-size: 0.72rem; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  .xray-display {
+    background: #0a1929;
+    aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .xray-bg {
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    border: 1px solid rgba(14,165,160,0.3);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+
+  .xray-inner {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    border: 1px solid rgba(14,165,160,0.4);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .xray-center-icon {
+    width: 64px; height: 64px;
+    background: rgba(14,165,160,0.15);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .scan-line {
+    position: absolute;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(14,165,160,0.6), transparent);
+    animation: scan 3s linear infinite;
+    top: 0;
+  }
+
+  @keyframes scan {
+    from { top: 0; }
+    to { top: 100%; }
+  }
+
+  .xray-label {
+    position: absolute;
+    bottom: 18px;
+    color: rgba(255,255,255,0.6);
+    font-size: 0.85rem;
+  }
+
+  .result-row {
+    padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .result-label { color: rgba(255,255,255,0.7); font-size: 0.9rem; }
+
+  .result-ok {
+    color: #28C940; font-weight: 700; font-size: 0.9rem;
+  }
+
+  .result-warn {
+    color: #FFBD2E; font-weight: 700; font-size: 0.9rem;
+  }
+
+  /* ── SECTION SHARED ── */
+  section { padding: 90px 5%; }
+
+  .section-tag {
+    display: inline-block;
+    color: var(--teal); font-weight: 600; font-size: 0.85rem;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    font-weight: 800; color: var(--dark);
+    margin-bottom: 16px;
+  }
+
+  .section-desc {
+    color: var(--mid); font-size: 1rem; line-height: 1.75;
+    max-width: 520px;
+  }
+
+  /* ── FEATURES ── */
+  .features { background: white; }
+
+  .features-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 56px; flex-wrap: wrap; gap: 20px;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .feature-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 28px;
+    transition: all .3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--teal), var(--teal-light));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .3s;
+  }
+
+  .feature-card:hover::before { transform: scaleX(1); }
+  .feature-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(14,165,160,0.1); }
+
+  .feature-icon {
+    width: 52px; height: 52px;
+    background: var(--teal-pale);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .feature-icon svg { width: 26px; height: 26px; color: var(--teal); }
+
+  .feature-card h3 {
+    font-size: 1.1rem; font-weight: 700;
+    color: var(--dark); margin-bottom: 10px;
+  }
+
+  .feature-card p { color: var(--mid); font-size: 0.92rem; line-height: 1.65; }
+
+  /* ── HOW IT WORKS ── */
+  .how-it-works { background: var(--bg); }
+
+  .how-header { text-align: center; margin-bottom: 64px; }
+
+  .how-header .section-desc { margin: 0 auto; }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    position: relative;
+  }
+
+  .steps-grid::before {
+    content: '';
+    position: absolute;
+    top: 40px; left: 12.5%; right: 12.5%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--teal-pale), var(--teal-light), var(--teal-pale));
+    z-index: 0;
+  }
+
+  .step-card {
+    text-align: center;
+    position: relative; z-index: 1;
+  }
+
+  .step-num {
+    width: 80px; height: 80px;
+    background: var(--teal-pale);
+    border: 2px solid rgba(14,165,160,0.25);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    position: relative;
+    transition: all .3s;
+  }
+
+  .step-card:hover .step-num {
+    background: var(--teal);
+    border-color: var(--teal);
+  }
+
+  .step-card:hover .step-num svg { color: white; }
+
+  .step-num svg { width: 32px; height: 32px; color: var(--teal); transition: color .3s; }
+
+  .step-badge {
+    position: absolute; top: -8px; right: -8px;
+    width: 26px; height: 26px;
+    background: var(--teal); color: white;
+    border-radius: 50%; font-size: 0.75rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .step-card h3 {
+    font-size: 1rem; font-weight: 700;
+    color: var(--dark); margin-bottom: 8px;
+  }
+
+  .step-card p { color: var(--mid); font-size: 0.88rem; line-height: 1.65; }
+
+  /* ── ACCURACY / TRUST ── */
+  .trust-section {
+    background: linear-gradient(135deg, var(--dark) 0%, #152535 100%);
+    color: white;
+  }
+
+  .trust-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .trust-section .section-tag { color: var(--teal-light); }
+  .trust-section .section-title { color: white; }
+  .trust-section .section-desc { color: rgba(255,255,255,0.6); }
+
+  .trust-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 40px;
+  }
+
+  .trust-stat {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 24px;
+  }
+
+  .trust-stat-value {
+    font-size: 2rem; font-weight: 800; color: var(--teal-light);
+    margin-bottom: 4px;
+  }
+
+  .trust-stat-label {
+    font-size: 0.85rem; color: rgba(255,255,255,0.5);
+  }
+
+  .badges-list {
+    display: flex; flex-direction: column; gap: 16px; margin-top: 32px;
+  }
+
+  .badge-item {
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+
+  .badge-icon {
+    width: 40px; height: 40px;
+    background: rgba(14,165,160,0.2);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .badge-icon svg { width: 20px; height: 20px; color: var(--teal-light); }
+
+  .badge-text h4 { font-size: 0.92rem; font-weight: 600; color: white; margin-bottom: 2px; }
+  .badge-text p { font-size: 0.8rem; color: rgba(255,255,255,0.5); }
+
+  /* ── CTA ── */
+  .cta-section {
+    background: white;
+    text-align: center;
+    padding: 100px 5%;
+  }
+
+  .cta-section .section-title { font-size: clamp(2rem, 3.5vw, 3rem); margin-bottom: 20px; }
+  .cta-section .section-desc { margin: 0 auto 40px; text-align: center; }
+
+  .cta-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--dark);
+    color: rgba(255,255,255,0.4);
+    padding: 24px 5%;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.82rem;
+    flex-wrap: wrap; gap: 12px;
+  }
+
+  footer a { color: rgba(255,255,255,0.4); text-decoration: none; }
+  footer a:hover { color: var(--teal-light); }
+
+  /* ── ANIMATIONS ── */
+  .fade-up {
+    opacity: 0; transform: translateY(24px);
+    transition: all 0.6s ease;
+  }
+
+  .fade-up.visible {
+    opacity: 1; transform: translateY(0);
+  }
+
+  /* ── ANALYZE PAGE ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .analyze-page {
+    min-height: 100vh;
+    padding: 90px 5% 60px;
+    background: var(--bg);
+  }
+
+  .analyze-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .analyze-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .upload-panel {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+  }
+
+  .upload-panel h3 {
+    font-size: 1rem; font-weight: 700;
+    color: var(--dark); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 48px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+    background: var(--bg);
+  }
+
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--teal);
+    background: var(--teal-pale);
+  }
+
+  .drop-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+
+  .drop-icon {
+    width: 56px; height: 56px;
+    background: var(--teal-pale);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+  }
+
+  .drop-icon svg { width: 28px; height: 28px; color: var(--teal); }
+
+  .drop-zone p { color: var(--mid); font-size: 0.9rem; line-height: 1.6; }
+  .drop-zone span { color: var(--teal); font-weight: 600; }
+
+  .preview-container {
+    margin-top: 20px;
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0a1929;
+    display: none;
+  }
+
+  .preview-container.show { display: block; }
+
+  #previewImg {
+    width: 100%; display: block;
+    border-radius: 12px;
+  }
+
+  #resultCanvas {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+
+  .analyze-btn {
+    width: 100%; margin-top: 16px;
+    padding: 14px;
+    background: var(--teal); color: white; border: none;
+    border-radius: 10px; font-family: inherit;
+    font-size: 1rem; font-weight: 600;
+    cursor: pointer; transition: all .25s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+
+  .analyze-btn:hover:not(:disabled) {
+    background: var(--teal-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(14,165,160,0.3);
+  }
+
+  .analyze-btn:disabled {
+    opacity: 0.5; cursor: not-allowed;
+  }
+
+  /* Results panel */
+  .results-panel {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    display: flex; flex-direction: column;
+  }
+
+  .results-panel h3 {
+    font-size: 1rem; font-weight: 700;
+    color: var(--dark); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .result-empty {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: var(--light); text-align: center; gap: 12px;
+    padding: 40px 0;
+  }
+
+  .result-empty svg { width: 48px; height: 48px; opacity: .4; }
+
+  .loading-state {
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px; padding: 40px 0; flex: 1;
+  }
+
+  .loading-state.show { display: flex; }
+
+  .spinner {
+    width: 48px; height: 48px;
+    border: 3px solid var(--teal-pale);
+    border-top-color: var(--teal);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-state p { color: var(--mid); font-size: 0.9rem; }
+
+  .detections-list {
+    display: none; flex-direction: column; gap: 12px;
+  }
+
+  .detections-list.show { display: flex; }
+
+  .detection-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    animation: slideIn .3s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .detection-left { display: flex; align-items: center; gap: 10px; }
+
+  .det-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .det-label { font-weight: 600; font-size: 0.92rem; color: var(--dark); }
+  .det-coords { font-size: 0.78rem; color: var(--light); margin-top: 2px; }
+
+  .det-conf {
+    font-weight: 700; font-size: 0.88rem;
+    background: var(--teal-pale); color: var(--teal);
+    padding: 4px 10px; border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  .conf-bar-wrap {
+    height: 4px; background: var(--border);
+    border-radius: 2px; margin-top: 8px; overflow: hidden;
+  }
+
+  .conf-bar {
+    height: 100%; background: var(--teal);
+    border-radius: 2px; transition: width .5s ease;
+  }
+
+  .no-detection {
+    text-align: center; padding: 32px;
+    color: var(--mid);
+  }
+
+  .no-detection svg { width: 40px; height: 40px; color: var(--teal); margin-bottom: 12px; }
+
+  .summary-bar {
+    margin-top: auto; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.85rem; color: var(--mid);
+    display: none;
+  }
+
+  .summary-bar.show { display: flex; }
+
+  .summary-bar strong { color: var(--dark); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .analyze-layout { grid-template-columns: 1fr; }
+  }
+    .hero { grid-template-columns: 1fr; padding-top: 90px; }
+    .hero-visual { order: -1; max-width: 400px; margin: 0 auto; }
+    .features-grid { grid-template-columns: repeat(2, 1fr); }
+    .steps-grid { grid-template-columns: repeat(2, 1fr); }
+    .steps-grid::before { display: none; }
+    .trust-inner { grid-template-columns: 1fr; gap: 40px; }
+    .nav-links { display: none; }
+  }
+
+  @media (max-width: 600px) {
+    .features-grid { grid-template-columns: 1fr; }
+    .steps-grid { grid-template-columns: 1fr; }
+    .trust-stats { grid-template-columns: 1fr 1fr; }
+    .hero-stats { gap: 20px; flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    </div>
+    BrainScope AI
+  </a>
+
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#trust">Accuracy</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+
+  <div class="nav-actions">
+    <button class="nav-analyze-btn" id="navAnalyzeBtn" onclick="showPage('analyze')">🧠 Analyze CT Scan</button>
+    <button class="btn-ghost" onclick="showPage('landing')">Home</button>
+    <button class="btn-primary">Try for Free</button>
+  </div>
+</nav>
+
+<!-- LANDING PAGE -->
+<div id="landingPage" class="page active">
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span></span>
+      AI Technology for Healthcare
+    </div>
+
+    <h1>
+      Analyze Brain CT<br>
+      <span class="accent">with AI Power</span>
+    </h1>
+
+    <p class="hero-desc">
+      AI-powered platform for Brain CT Scan analysis —
+      detects bleeding, ischemia, glioma, meningioma, and more
+      with confidence scores in seconds.
+    </p>
+
+    <div class="hero-btns">
+      <button class="btn-large">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+        Get Started
+      </button>
+      <button class="btn-outline-large">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/>
+        </svg>
+        Watch Demo
+      </button>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-value">98.2%</div>
+        <div class="stat-label">Accuracy</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">&lt;12s</div>
+        <div class="stat-label">Avg. Analysis Time</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">320+</div>
+        <div class="stat-label">Hospitals Onboarded</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="analysis-card">
+      <div class="card-titlebar">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+        <span class="card-title-text">BrainScope AI Analysis</span>
+        <span class="ai-badge-card">AI Powered</span>
+      </div>
+
+      <div class="xray-display">
+        <div class="scan-line"></div>
+        <div class="xray-bg">
+          <div class="xray-inner">
+            <div class="xray-center-icon">
+              <svg width="32" height="32" fill="none" stroke="#0EA5A0" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="xray-label">Brain CT Analysis</div>
+      </div>
+
+      <div class="result-row">
+        <span class="result-label">Bleeding</span>
+        <span class="result-ok">Not Detected</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Ischemia</span>
+        <span class="result-ok">Not Detected</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Classification</span>
+        <span class="result-ok">Normal</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">AI Confidence</span>
+        <span class="result-ok">99.5%</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-header fade-up">
+    <div>
+      <span class="section-tag">Features</span>
+      <h2 class="section-title">Built for the radiology workflow</h2>
+      <p class="section-desc">Designed with radiologists, validated on millions of studies, and deployed inside hospital networks.</p>
+    </div>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card fade-up">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M12 8v4l3 3"/>
+        </svg>
+      </div>
+      <h3>Intelligent AI Analysis</h3>
+      <p>Deep Learning trained on 13,000+ Brain CT images across 6 neurological conditions.</p>
+    </div>
+
+    <div class="feature-card fade-up" style="animation-delay:.1s">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <h3>Fast Results</h3>
+      <p>Get analysis results within 5 seconds, helping physicians make faster decisions in urgent cases.</p>
+    </div>
+
+    <div class="feature-card fade-up" style="animation-delay:.2s">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <h3>Automated Reports</h3>
+      <p>Generate comprehensive automated analysis reports, ready to export as PDF.</p>
+    </div>
+
+    <div class="feature-card fade-up" style="animation-delay:.05s">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <h3>Security Standards</h3>
+      <p>HIPAA and FDA certified for patient data security and compliance.</p>
+    </div>
+
+    <div class="feature-card fade-up" style="animation-delay:.15s">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+      </div>
+      <h3>Team Collaboration</h3>
+      <p>Multi-user management with case sharing and consultation between physicians.</p>
+    </div>
+
+    <div class="feature-card fade-up" style="animation-delay:.25s">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+          <line x1="12" y1="18" x2="12.01" y2="18"/>
+        </svg>
+      </div>
+      <h3>Access Anywhere</h3>
+      <p>Access via any web browser on desktop or mobile, no installation required.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-it-works" id="how">
+  <div class="how-header fade-up">
+    <span class="section-tag">How It Works</span>
+    <h2 class="section-title">Simple 4-Step Process</h2>
+    <p class="section-desc">A simple and fast analysis workflow, designed for immediate use.</p>
+  </div>
+
+  <div class="steps-grid">
+    <div class="step-card fade-up">
+      <div class="step-num">
+        <span class="step-badge">01</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+      </div>
+      <h3>Upload Brain CT Image</h3>
+      <p>Upload Brain CT image in PNG or JPEG format through our secure system</p>
+    </div>
+
+    <div class="step-card fade-up" style="animation-delay:.1s">
+      <div class="step-num">
+        <span class="step-badge">02</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+      </div>
+      <h3>AI Processing</h3>
+      <p>AI analyzes the image using a Deep Learning model trained by medical experts.</p>
+    </div>
+
+    <div class="step-card fade-up" style="animation-delay:.2s">
+      <div class="step-num">
+        <span class="step-badge">03</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <polyline points="9 15 12 18 15 15"/>
+          <line x1="12" y1="12" x2="12" y2="18"/>
+        </svg>
+      </div>
+      <h3>Receive Results</h3>
+      <p>View analysis results with explanations and probability scores for various conditions.</p>
+    </div>
+
+    <div class="step-card fade-up" style="animation-delay:.3s">
+      <div class="step-num">
+        <span class="step-badge">04</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+      </div>
+      <h3>Physician Confirms</h3>
+      <p>Physician reviews and confirms the diagnosis, adding any additional comments.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST / ACCURACY -->
+<section class="trust-section" id="trust">
+  <div class="trust-inner">
+    <div class="fade-up">
+      <span class="section-tag">Accuracy</span>
+      <h2 class="section-title">Trusted by radiology departments<br>across 22 countries</h2>
+      <p class="section-desc">From rural clinics to academic medical centers, BrainScope AI augments every radiologist with a tireless second reader.</p>
+
+      <div class="trust-stats">
+        <div class="trust-stat">
+          <div class="trust-stat-value">98.2%</div>
+          <div class="trust-stat-label">Diagnostic accuracy</div>
+        </div>
+        <div class="trust-stat">
+          <div class="trust-stat-value">&lt;12s</div>
+          <div class="trust-stat-label">Average analysis</div>
+        </div>
+        <div class="trust-stat">
+          <div class="trust-stat-value">40+</div>
+          <div class="trust-stat-label">Findings detected</div>
+        </div>
+        <div class="trust-stat">
+          <div class="trust-stat-value">6M+</div>
+          <div class="trust-stat-label">Annotated images</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fade-up">
+      <div class="badges-list">
+        <div class="badge-item">
+          <div class="badge-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="badge-text">
+            <h4>HIPAA Compliant</h4>
+            <p>Protects patient data to international standards.</p>
+          </div>
+        </div>
+        <div class="badge-item">
+          <div class="badge-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div class="badge-text">
+            <h4>FDA-aligned</h4>
+            <p>Operates in alignment with FDA guidelines for medical AI.</p>
+          </div>
+        </div>
+        <div class="badge-item">
+          <div class="badge-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0110 0v4"/>
+            </svg>
+          </div>
+          <div class="badge-text">
+            <h4>ISO 27001 Ready</h4>
+            <p>On-prem or private cloud deployment.</p>
+          </div>
+        </div>
+        <div class="badge-item">
+          <div class="badge-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <div class="badge-text">
+            <h4>Peer-reviewed accuracy</h4>
+            <p>Validated clinically by medical experts.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <span class="section-tag">Get Started Today</span>
+  <h2 class="section-title">Ready to elevate diagnostics with AI?</h2>
+  <p class="section-desc">Try free for 30 days, no credit card required. Our team is available 24/7.</p>
+  <div class="cta-btns">
+    <button class="btn-large">Try for Free — Now</button>
+    <button class="btn-outline-large">Schedule a Demo</button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>© 2026 BrainScope AI</span>
+  <span>For investigational use. Not a replacement for clinical judgment.</span>
+</footer>
+
+</div><!-- end landing page -->
+
+<!-- ANALYZE PAGE -->
+<div id="analyzePage" class="page">
+  <div class="analyze-page">
+    <div class="analyze-header">
+      <span class="section-tag">Analyze Image</span>
+      <h2 class="section-title">Analyze Brain CT with AI</h2>
+      <p class="section-desc" style="margin:0 auto">Upload Brain CT image — AI will classify and show confidence for each finding</p>
+    </div>
+
+    <div class="analyze-layout">
+      <!-- Upload Panel -->
+      <div class="upload-panel">
+        <h3>
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+          </svg>
+          Upload Image
+        </h3>
+
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept="image/*">
+          <div class="drop-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </div>
+          <p><span>Click to select a file</span> or drag and drop here<br>
+          Supports JPG, PNG</p>
+        </div>
+
+        <div class="preview-container" id="previewContainer">
+          <img id="previewImg" alt="Brain CT preview">
+          <canvas id="resultCanvas"></canvas>
+        </div>
+
+        <button class="analyze-btn" id="analyzeBtn" disabled onclick="runAnalysis()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Analyze Image
+        </button>
+      </div>
+
+      <!-- Results Panel -->
+      <div class="results-panel">
+        <h3>
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+          </svg>
+          Analysis Results
+        </h3>
+
+        <div class="result-empty" id="resultEmpty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <p>Upload image and click "Analyze Image"<br>to see results</p>
+        </div>
+
+        <div class="loading-state" id="loadingState">
+          <div class="spinner"></div>
+          <p>Processing image with AI...</p>
+        </div>
+
+        <div class="detections-list" id="detectionsList"></div>
+
+        <div class="summary-bar" id="summaryBar">
+          <span>Total detections: <strong id="totalCount">0</strong> </span>
+          <span>Model: <strong>find-glioma v2</strong></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── PAGE SWITCHING ──
+  function showPage(page) {
+    document.getElementById('landingPage').classList.toggle('active', page === 'landing');
+    document.getElementById('analyzePage').classList.toggle('active', page === 'analyze');
+    document.getElementById('navAnalyzeBtn').classList.toggle('active', page === 'analyze');
+    window.scrollTo(0, 0);
+  }
+
+  // Hook hero button
+  document.querySelector('.btn-large').addEventListener('click', () => showPage('analyze'));
+
+  // ── FILE UPLOAD ──
+  const fileInput = document.getElementById('fileInput');
+  const dropZone = document.getElementById('dropZone');
+  const previewContainer = document.getElementById('previewContainer');
+  const previewImg = document.getElementById('previewImg');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+
+  let currentFile = null;
+
+  fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+
+  function handleFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    currentFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      previewImg.src = e.target.result;
+      previewContainer.classList.add('show');
+      analyzeBtn.disabled = false;
+      resetResults();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function resetResults() {
+    document.getElementById('resultEmpty').style.display = 'flex';
+    document.getElementById('loadingState').classList.remove('show');
+    document.getElementById('detectionsList').classList.remove('show');
+    document.getElementById('summaryBar').classList.remove('show');
+    const canvas = document.getElementById('resultCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  const WORKFLOW_URL = 'https://detect.roboflow.com/infer/workflows/fire-cjxu1/find-glioma-and-brainscope-ai';
+  const ROBOFLOW_KEY = 'CXCNe93GGPiEeF2XrcYE';
+
+  const COLORS = ['#0EA5A0','#F59E0B','#EF4444','#8B5CF6','#10B981','#F97316','#3B82F6'];
+
+  async function runAnalysis() {
+    if (!currentFile) return;
+
+    document.getElementById('resultEmpty').style.display = 'none';
+    document.getElementById('loadingState').classList.add('show');
+    document.getElementById('detectionsList').classList.remove('show');
+    document.getElementById('summaryBar').classList.remove('show');
+    analyzeBtn.disabled = true;
+
+    try {
+      const base64 = await toBase64(currentFile);
+      const imageData = base64.split(',')[1];
+
+      const response = await fetch(WORKFLOW_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          api_key: ROBOFLOW_KEY,
+          inputs: { image: { type: 'base64', value: imageData } }
+        })
+      });
+
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const result = await response.json();
+
+      // Workflows API returns nested: outputs[0].predictions.predictions
+      const predictions = result?.outputs?.[0]?.predictions?.predictions || [];
+
+      document.getElementById('loadingState').classList.remove('show');
+      displayResults({ predictions });
+
+    } catch (err) {
+      document.getElementById('loadingState').classList.remove('show');
+      document.getElementById('resultEmpty').style.display = 'flex';
+      document.getElementById('resultEmpty').innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" style="width:40px;height:40px">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p style="color:#EF4444">Error occurred<br><small style="color:var(--mid)">${err.message}</small></p>
+      `;
+      console.error(err);
+    }
+
+    analyzeBtn.disabled = false;
+  }
+
+  function toBase64(file) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+  }
+
+  function displayResults(data) {
+    const predictions = data.predictions || [];
+    const list = document.getElementById('detectionsList');
+    list.innerHTML = '';
+
+    // ── Check if best confidence < 50% → show error ──
+    const best = predictions.length > 0
+      ? Math.max(...predictions.map(p => p.confidence))
+      : 0;
+
+    if (predictions.length === 0 || best < 0.50) {
+      list.innerHTML = `
+        <div class="no-detection" style="padding:32px;text-align:center">
+          <div style="width:56px;height:56px;background:#FEE2E2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <p style="color:#EF4444;font-weight:700;font-size:1rem;margin-bottom:6px">Low Confidence — Unable to Classify</p>
+          <p style="color:var(--mid);font-size:0.85rem">No finding exceeded 50% confidence.<br>Please upload a clearer or higher-quality image.</p>
+        </div>`;
+      list.classList.add('show');
+      document.getElementById('summaryBar').classList.remove('show');
+      return;
+    }
+
+    // ── Sort by confidence descending ──
+    const sorted = [...predictions].sort((a, b) => b.confidence - a.confidence);
+
+    sorted.forEach((p, i) => {
+      const color = COLORS[i % COLORS.length];
+      const conf = Math.round(p.confidence * 100);
+
+      // ── Fix NaN: only show coords if valid numbers ──
+      const hasCoords = [p.x, p.y, p.width, p.height].every(v => typeof v === 'number' && !isNaN(v));
+      const coordText = hasCoords
+        ? `x:${Math.round(p.x)} y:${Math.round(p.y)} &nbsp;·&nbsp; ${Math.round(p.width)}×${Math.round(p.height)}px`
+        : 'Position data unavailable';
+
+      // ── Confidence label color ──
+      const confColor = conf >= 80 ? '#10B981' : conf >= 50 ? '#F59E0B' : '#EF4444';
+
+      const item = document.createElement('div');
+      item.className = 'detection-item';
+      item.style.borderLeft = `4px solid ${color}`;
+      item.innerHTML = `
+        <div style="flex:1">
+          <div class="detection-left">
+            <div class="det-dot" style="background:${color}"></div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div class="det-label">${p.class}</div>
+                <div class="det-conf" style="background:${confColor}22;color:${confColor}">${conf}%</div>
+              </div>
+              <div class="det-coords">${coordText}</div>
+              <div class="conf-bar-wrap" style="margin-top:8px">
+                <div class="conf-bar" style="width:${conf}%;background:linear-gradient(90deg,${color},${confColor})"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      list.appendChild(item);
+    });
+
+    list.classList.add('show');
+    document.getElementById('totalCount').textContent = sorted.length;
+    document.getElementById('summaryBar').classList.add('show');
+
+    // ── Draw boxes after image fully loaded ──
+    if (previewImg.complete && previewImg.naturalWidth > 0) {
+      drawBoxes(sorted);
+    } else {
+      previewImg.onload = () => drawBoxes(sorted);
+    }
+  }
+
+  function drawBoxes(predictions) {
+    const img = previewImg;
+    const canvas = document.getElementById('resultCanvas');
+
+    const natW = img.naturalWidth;
+    const natH = img.naturalHeight;
+    const dispW = img.offsetWidth;
+    const dispH = img.offsetHeight;
+
+    if (!natW || !natH || !dispW || !dispH) return;
+
+    canvas.width = natW;
+    canvas.height = natH;
+    canvas.style.width = dispW + 'px';
+    canvas.style.height = dispH + 'px';
+
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, natW, natH);
+
+    predictions.forEach((p, i) => {
+      // skip if coords are invalid
+      if ([p.x, p.y, p.width, p.height].some(v => typeof v !== 'number' || isNaN(v))) return;
+
+      const color = COLORS[i % COLORS.length];
+      const conf = Math.round(p.confidence * 100);
+      const x = p.x - p.width / 2;
+      const y = p.y - p.height / 2;
+
+      // Box
+      ctx.strokeStyle = color;
+      ctx.lineWidth = Math.max(2, natW / 300);
+      ctx.strokeRect(x, y, p.width, p.height);
+
+      // Label background
+      const fontSize = Math.max(14, natW / 40);
+      ctx.font = `bold ${fontSize}px sans-serif`;
+      const label = `${p.class}  ${conf}%`;
+      const tw = ctx.measureText(label).width + 16;
+      const th = fontSize + 10;
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y - th, tw, th);
+
+      // Label text
+      ctx.fillStyle = 'white';
+      ctx.fillText(label, x + 8, y - 6);
+    });
+  }
+
+  // ── SCROLL ANIMATIONS ──
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  window.addEventListener('scroll', () => {
+    const nav = document.querySelector('nav');
+    nav.style.boxShadow = window.scrollY > 20 ? '0 4px 24px rgba(0,0,0,0.07)' : 'none';
+  });
+</script>
+</body>
+</html>
