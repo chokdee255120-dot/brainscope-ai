@@ -1210,10 +1210,31 @@
         <div class="detections-list" id="detectionsList"></div>
 
         <div class="summary-bar" id="summaryBar">
-          <span>Total detections: <strong id="totalCount">0</strong> </span>
-          <span>Model: <strong>find-glioma v2</strong></span>
+          <span>Total detections: <strong id="totalCount">0</strong></span>
+          <button id="reportBtn" onclick="generateReport()" style="margin-left:auto;padding:8px 18px;background:var(--teal);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.85rem;display:flex;align-items:center;gap:6px">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Generate Report
+          </button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Report Modal ───────────────────────────────────────────────── -->
+<div id="reportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;overflow-y:auto;padding:20px">
+  <div style="max-width:800px;margin:0 auto;background:#fff;border-radius:16px;padding:0;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div style="background:linear-gradient(135deg,#0EA5A0,#0b8a85);padding:24px 32px;color:#fff;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:0.75rem;opacity:0.8;margin-bottom:4px">BrainScope AI — Radiology Report</div>
+        <h2 style="margin:0;font-size:1.4rem">Brain CT Analysis Report</h2>
+      </div>
+      <button onclick="document.getElementById('reportModal').style.display='none'" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1.2rem">&#x2715;</button>
+    </div>
+    <div id="reportContent" style="padding:32px"></div>
+    <div style="padding:16px 32px 24px;display:flex;gap:12px;border-top:1px solid #f0f0f0">
+      <button onclick="printReport()" style="padding:10px 24px;background:var(--teal, #0EA5A0);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">Print / Save PDF</button>
+      <button onclick="document.getElementById('reportModal').style.display='none'" style="padding:10px 24px;background:#f5f5f5;border:none;border-radius:8px;cursor:pointer">Close</button>
     </div>
   </div>
 </div>
@@ -1370,6 +1391,7 @@
       const result = await response.json();
 
       const predictions = result?.predictions || [];
+      lastPredictions = predictions;
 
       document.getElementById('loadingState').classList.remove('show');
       displayResults({ predictions });
@@ -1536,6 +1558,177 @@
     const nav = document.querySelector('nav');
     nav.style.boxShadow = window.scrollY > 20 ? '0 4px 24px rgba(0,0,0,0.07)' : 'none';
   });
+</script>
+<script>
+// ── ReportWriter Agent ──────────────────────────────────────────────────────
+const DISEASE_DB = {
+  glioma:      { urgency:'HIGH',     color:'#F59E0B', specialist:'Neurosurgeon / Neuro-Oncologist',
+                 desc:'Primary brain tumor originating from glial cells. May require biopsy and multimodal treatment.',
+                 action:'Urgent referral for MRI with contrast, neurosurgical consultation and treatment planning.' },
+  meningioma:  { urgency:'MODERATE', color:'#3B82F6', specialist:'Neurosurgeon',
+                 desc:'Typically benign tumor arising from the meninges. Growth rate varies.',
+                 action:'Referral for MRI follow-up and neurosurgical evaluation for resection planning.' },
+  pituitary:   { urgency:'MODERATE', color:'#8B5CF6', specialist:'Neurosurgeon / Endocrinologist',
+                 desc:'Pituitary region abnormality detected. May affect hormonal balance.',
+                 action:'Referral for hormonal blood tests, MRI of sella turcica, and endocrinology consultation.' },
+  bleeding:    { urgency:'CRITICAL', color:'#EF4444', specialist:'Neurosurgeon (EMERGENCY)',
+                 desc:'Intracranial hemorrhage identified. Life-threatening if untreated.',
+                 action:'IMMEDIATE neurosurgical consultation and possible emergency intervention required.' },
+  ischemia:    { urgency:'CRITICAL', color:'#EF4444', specialist:'Neurologist / Stroke Team (EMERGENCY)',
+                 desc:'Findings consistent with ischemic stroke. Time-sensitive condition.',
+                 action:'IMMEDIATE stroke protocol activation. Evaluate for thrombolysis within treatment window.' },
+  alzheimer:   { urgency:'LOW',      color:'#10B981', specialist:'Neurologist / Geriatrician',
+                 desc:'Brain changes consistent with neurodegenerative process.',
+                 action:'Referral for formal cognitive assessment (MMSE/MoCA), neuropsychological testing, and management planning.' },
+  normal:      { urgency:'NONE',     color:'#6B7280', specialist:'None required',
+                 desc:'No significant intracranial abnormalities detected on this study.',
+                 action:'Routine clinical follow-up as indicated by presenting symptoms.' }
+};
+
+const URGENCY_RANK = { CRITICAL:4, HIGH:3, MODERATE:2, LOW:1, NONE:0 };
+const URGENCY_STYLE = {
+  CRITICAL:{ bg:'#FEE2E2', color:'#991B1B', label:'CRITICAL — Immediate Action Required' },
+  HIGH:    { bg:'#FEF3C7', color:'#92400E', label:'HIGH — Urgent Referral Needed' },
+  MODERATE:{ bg:'#DBEAFE', color:'#1E40AF', label:'MODERATE — Specialist Consultation Recommended' },
+  LOW:     { bg:'#D1FAE5', color:'#065F46', label:'LOW — Routine Follow-up' },
+  NONE:    { bg:'#F3F4F6', color:'#374151', label:'NORMAL — No Significant Finding' }
+};
+
+let lastPredictions = [];
+
+function generateReport() {
+  if (!lastPredictions.length) {
+    alert('Please analyze an image first.');
+    return;
+  }
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' });
+  const timeStr = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+  const reportId = 'BSC-' + Date.now().toString(36).toUpperCase();
+
+  // Determine overall urgency
+  let topUrgency = 'NONE', topFindings = [];
+  const filteredPreds = lastPredictions.filter(p => p.class !== 'normal');
+
+  filteredPreds.forEach(p => {
+    const cls = (p.class || '').toLowerCase();
+    const info = DISEASE_DB[cls];
+    if (!info) return;
+    topFindings.push({ ...p, info });
+    if (URGENCY_RANK[info.urgency] > URGENCY_RANK[topUrgency]) topUrgency = info.urgency;
+  });
+  if (!topFindings.length) topUrgency = 'NONE';
+
+  const us = URGENCY_STYLE[topUrgency] || URGENCY_STYLE.NONE;
+
+  // Build findings HTML
+  let findingsHtml = '';
+  if (!topFindings.length) {
+    const info = DISEASE_DB.normal;
+    findingsHtml = `<div style="padding:16px;background:#F9FAFB;border-radius:8px;border-left:4px solid #6B7280">
+      <strong style="color:#374151">Normal Study</strong>
+      <p style="margin:8px 0 0;color:#6B7280;font-size:0.9rem">${info.desc}</p>
+    </div>`;
+  } else {
+    topFindings.forEach((f, i) => {
+      const conf = Math.round(f.confidence * 100);
+      const cls = (f.class || '').toLowerCase();
+      const info = f.info;
+      findingsHtml += `
+      <div style="padding:16px;background:#F9FAFB;border-radius:8px;border-left:4px solid ${info.color};margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <strong style="color:#1F2937;font-size:1rem">${i+1}. ${CLASS_MAP[cls] || cls}</strong>
+          <span style="background:${info.color}22;color:${info.color};padding:3px 10px;border-radius:12px;font-size:0.8rem;font-weight:700">${conf}% confidence</span>
+        </div>
+        <p style="margin:0 0 6px;color:#4B5563;font-size:0.9rem">${info.desc}</p>
+        <div style="font-size:0.82rem;color:#6B7280">
+          Location: x=${Math.round(f.x)}, y=${Math.round(f.y)} &nbsp;|&nbsp; Size: ${Math.round(f.width)}×${Math.round(f.height)}px
+        </div>
+      </div>`;
+    });
+  }
+
+  // Get specialist list
+  const specialists = [...new Set(topFindings.map(f => f.info.specialist))];
+  const actions = [...new Set(topFindings.map(f => f.info.action))];
+
+  // Build scan image thumbnail
+  const imgSrc = document.getElementById('previewImg').src;
+
+  document.getElementById('reportContent').innerHTML = `
+    <!-- Header info -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid #E5E7EB">
+      <div>
+        <div style="font-size:0.75rem;color:#9CA3AF;margin-bottom:2px">Report ID</div>
+        <div style="font-weight:700;color:#1F2937">${reportId}</div>
+      </div>
+      <div>
+        <div style="font-size:0.75rem;color:#9CA3AF;margin-bottom:2px">Date & Time</div>
+        <div style="font-weight:700;color:#1F2937">${dateStr}, ${timeStr}</div>
+      </div>
+      <div>
+        <div style="font-size:0.75rem;color:#9CA3AF;margin-bottom:2px">Modality</div>
+        <div style="font-weight:700;color:#1F2937">Brain CT Scan</div>
+      </div>
+      <div>
+        <div style="font-size:0.75rem;color:#9CA3AF;margin-bottom:2px">AI Model</div>
+        <div style="font-weight:700;color:#1F2937">BrainScope AI v4</div>
+      </div>
+    </div>
+
+    <!-- Urgency banner -->
+    <div style="background:${us.bg};border:1px solid ${us.color}33;border-radius:10px;padding:14px 18px;margin-bottom:24px;display:flex;align-items:center;gap:12px">
+      <div style="width:10px;height:10px;border-radius:50%;background:${us.color};flex-shrink:0"></div>
+      <strong style="color:${us.color};font-size:1rem">${us.label}</strong>
+    </div>
+
+    <!-- Scan + Findings side-by-side -->
+    <div style="display:grid;grid-template-columns:200px 1fr;gap:20px;margin-bottom:24px">
+      <div>
+        <div style="font-size:0.75rem;color:#9CA3AF;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">CT Image</div>
+        <img src="${imgSrc}" style="width:100%;border-radius:8px;border:1px solid #E5E7EB">
+      </div>
+      <div>
+        <div style="font-size:0.75rem;color:#9CA3AF;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Findings</div>
+        ${findingsHtml}
+      </div>
+    </div>
+
+    <!-- Recommendations -->
+    ${topFindings.length ? `
+    <div style="margin-bottom:24px">
+      <div style="font-size:0.75rem;color:#9CA3AF;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Clinical Recommendations</div>
+      ${actions.map(a => `<div style="padding:12px 16px;background:#F0FDF4;border-radius:8px;border-left:3px solid #10B981;margin-bottom:8px;color:#065F46;font-size:0.9rem">${a}</div>`).join('')}
+    </div>
+    <div style="margin-bottom:24px">
+      <div style="font-size:0.75rem;color:#9CA3AF;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Suggested Specialist Referral</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${specialists.map(s => `<span style="background:#EFF6FF;color:#1D4ED8;padding:6px 14px;border-radius:20px;font-size:0.85rem;font-weight:600">${s}</span>`).join('')}
+      </div>
+    </div>` : ''}
+
+    <!-- Disclaimer -->
+    <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;padding:14px 16px;font-size:0.8rem;color:#78350F">
+      <strong>Disclaimer:</strong> This report is generated by an AI system for preliminary screening assistance only.
+      It is not a substitute for professional medical diagnosis. A qualified radiologist or physician must review and
+      validate all findings before any clinical decision is made. AI confidence scores are indicative, not definitive.
+    </div>
+  `;
+
+  document.getElementById('reportModal').style.display = 'block';
+}
+
+function printReport() {
+  const content = document.getElementById('reportContent').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write(`<html><head><title>BrainScope AI Report</title>
+    <style>body{font-family:sans-serif;padding:32px;max-width:800px;margin:0 auto}@media print{button{display:none}}</style>
+    </head><body>${content}<br><button onclick="window.print()">Print</button></body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 500);
+}
 </script>
 </body>
 </html>
