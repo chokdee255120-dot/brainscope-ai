@@ -1,0 +1,47 @@
+[
+  {
+    "workspace": "brain-hemorrhage",
+    "project": "brain-hemorrhage-detection",
+    "version": "1",
+    "images": 834,
+    "type": "classification",
+    "description": "hemorrhage/bleeding",
+    "status": "available"
+  },
+  {
+    "workspace": "roboflow-100",
+    "project": "brain-tumor-m2pbp",
+    "version": "2",
+    "images": 9900,
+    "type": "object-detection",
+    "description": "tumor (check classes)",
+    "status": "available"
+  },
+  {
+    "workspace": "stroke-detection",
+    "project": "brain-stroke",
+    "version": "2",
+    "images": 20,
+    "type": "object-detection",
+    "description": "stroke/ischemia",
+    "status": "available"
+  },
+  {
+    "workspace": "diagnoct",
+    "project": "brain-djpb5",
+    "version": "3",
+    "images": 13423,
+    "type": "classification",
+    "description": "original dataset - all classes",
+    "status": "available"
+  },
+  {
+    "workspace": "brain-mri",
+    "project": "brain-tumor-mri",
+    "version": "3",
+    "images": 338,
+    "type": "instance-segmentation",
+    "description": "tumor classes",
+    "status": "available"
+  }
+]

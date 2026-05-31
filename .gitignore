@@ -1,0 +1,30 @@
+# Large binary datasets — do not commit
+clahe_datasets/
+datasets/
+universe_dataset/
+
+# Runtime logs and output files
+*.log
+*_log.txt
+*_stderr.txt
+*_stdout.txt
+hemorrhage_*.txt
+inspector_log.txt
+overnight_log.txt
+
+# Upload tracker state (local progress state)
+uploaded_files.json
+uploaded_clahe.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+*.env
+
+# OS
+.DS_Store
+Thumbs.db

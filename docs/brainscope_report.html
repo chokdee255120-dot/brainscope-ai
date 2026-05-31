@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrainScope AI — Technical Report</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #1a1a2e; background: #fff; line-height: 1.7; }
+  .page { max-width: 960px; margin: 0 auto; padding: 40px 48px; }
+  h1 { font-size: 2.2rem; color: #0EA5A0; border-bottom: 3px solid #0EA5A0; padding-bottom: 12px; margin-bottom: 8px; }
+  h2 { font-size: 1.4rem; color: #0b8a85; margin: 36px 0 14px; border-left: 4px solid #0EA5A0; padding-left: 12px; }
+  h3 { font-size: 1.1rem; color: #1a1a2e; margin: 24px 0 10px; }
+  p  { margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+  th { background: #0EA5A0; color: #fff; padding: 10px 12px; text-align: left; }
+  td { padding: 9px 12px; border-bottom: 1px solid #e5e7eb; }
+  tr:nth-child(even) td { background: #f0fdfb; }
+  .highlight td { background: #d1fae5 !important; font-weight: 700; }
+  .bad td { background: #fee2e2 !important; }
+  code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.85em; color: #0f172a; }
+  pre  { background: #0f172a; color: #e2e8f0; padding: 16px 20px; border-radius: 8px; margin: 14px 0; overflow-x: auto; font-size: 0.82rem; line-height: 1.6; }
+  .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 20px 0; }
+  .metric-card { background: linear-gradient(135deg, #0EA5A0, #0b8a85); color: #fff; border-radius: 12px; padding: 20px; text-align: center; }
+  .metric-card .val { font-size: 2rem; font-weight: 800; }
+  .metric-card .lbl { font-size: 0.8rem; opacity: 0.85; margin-top: 4px; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 700; }
+  .badge-green  { background: #d1fae5; color: #065f46; }
+  .badge-red    { background: #fee2e2; color: #991b1b; }
+  .badge-yellow { background: #fef3c7; color: #92400e; }
+  .badge-blue   { background: #dbeafe; color: #1e40af; }
+  .mermaid { margin: 20px 0; }
+  .cover { background: linear-gradient(135deg, #0EA5A0 0%, #064e4b 100%); color: #fff; padding: 64px 48px; margin-bottom: 40px; border-radius: 0 0 24px 24px; }
+  .cover h1 { color: #fff; border-color: rgba(255,255,255,0.3); font-size: 2.8rem; }
+  .cover .subtitle { font-size: 1.1rem; opacity: 0.85; margin-top: 8px; }
+  .cover .meta { margin-top: 32px; font-size: 0.9rem; opacity: 0.75; }
+  .agent-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; margin-bottom: 14px; }
+  .agent-card h3 { margin: 0 0 8px; color: #0EA5A0; }
+  .toc a { color: #0EA5A0; text-decoration: none; display: block; padding: 4px 0; }
+  .toc a:hover { text-decoration: underline; }
+  .section-num { color: #0EA5A0; font-weight: 700; margin-right: 6px; }
+  @media print {
+    .page { padding: 20px 28px; }
+    .cover { border-radius: 0; }
+    .mermaid svg { max-width: 100%; }
+    h2 { page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ── COVER ───────────────────────────────────────────────────── -->
+<div class="cover">
+  <h1>BrainScope AI</h1>
+  <div class="subtitle">Multi-Disease Brain CT/MRI Analysis System<br>Technical Report & Architecture Documentation</div>
+  <div class="meta">
+    Version: v4 (deployed) / v6 (training) &nbsp;|&nbsp;
+    Date: May 31, 2026 &nbsp;|&nbsp;
+    Platform: GitHub Pages + Roboflow Cloud
+  </div>
+</div>
+
+<!-- ── TABLE OF CONTENTS ───────────────────────────────────────── -->
+<div class="toc" style="border:1px solid #e5e7eb;border-radius:10px;padding:20px 24px;margin-bottom:32px">
+  <h3 style="margin-bottom:12px">Table of Contents</h3>
+  <a href="#s1">1. Executive Summary</a>
+  <a href="#s2">2. System Architecture</a>
+  <a href="#s3">3. Data Pipeline</a>
+  <a href="#s4">4. Model Development History</a>
+  <a href="#s5">5. v4 Performance Report (Current Deployment)</a>
+  <a href="#s6">6. Frontend Application</a>
+  <a href="#s7">7. Agent System</a>
+  <a href="#s8">8. Setup Guide (From Scratch)</a>
+  <a href="#s9">9. Pending Work & Roadmap</a>
+</div>
+
+<!-- ── SECTION 1 ──────────────────────────────────────────────── -->
+<h2 id="s1"><span class="section-num">1.</span> Executive Summary</h2>
+<p>BrainScope AI is an end-to-end, browser-based medical imaging analysis system that automatically detects and classifies <strong>seven brain pathologies</strong> from CT/MRI scan images. The system combines a cloud-hosted object detection model (Roboflow RF-DETR), a GitHub Pages static frontend, and a multi-agent automation pipeline.</p>
+<p>Key capabilities:</p>
+<ul style="padding-left:20px;margin-bottom:12px">
+  <li><strong>Multi-disease detection</strong> with bounding box localisation</li>
+  <li><strong>DICOM (.dcm) native support</strong> — reads raw hospital scan files directly in-browser</li>
+  <li><strong>AI-generated radiology report</strong> with urgency classification and specialist referral</li>
+  <li><strong>Self-improving pipeline</strong> — agents automate dataset collection, training, and deployment</li>
+</ul>
+
+<div class="metric-grid">
+  <div class="metric-card"><div class="val">7</div><div class="lbl">Disease Classes</div></div>
+  <div class="metric-card"><div class="val">96%</div><div class="lbl">mAP@50 (v4)</div></div>
+  <div class="metric-card"><div class="val">21,806</div><div class="lbl">Training Images</div></div>
+  <div class="metric-card"><div class="val">4</div><div class="lbl">AI Agents</div></div>
+</div>
+
+<!-- ── SECTION 2 ──────────────────────────────────────────────── -->
+<h2 id="s2"><span class="section-num">2.</span> System Architecture</h2>
+
+<div class="mermaid">
+graph TB
+    subgraph USER["User Interface (Browser)"]
+        A[Upload CT/MRI or DICOM file]
+        B[Analyze Image Button]
+        C[Detection Results + Bounding Boxes]
+        D[Generate Report Button]
+        E[Medical Report - Urgency + Specialist]
+    end
+
+    subgraph FRONTEND["Frontend - GitHub Pages"]
+        F[index.html - Single Page App]
+        G[DICOM Parser - dicom-parser.js]
+        H[ReportWriter Agent - JavaScript]
+    end
+
+    subgraph CLOUD["Cloud Services"]
+        I[Roboflow Inference API\nfind-glioma-and-brainscope-ai/4]
+        J[GitHub Pages CDN]
+    end
+
+    subgraph AGENTS["Local Agent System"]
+        K[DataHunter\nagent_datahunter.py]
+        L[AutoTrainer\nagent_autotrainer.py]
+        M[Inspector\nagent_inspector.py]
+        N[ReportWriter\nembedded in frontend]
+    end
+
+    subgraph PIPELINE["Training Pipeline"]
+        O[Dataset Sources\nRoboflow Universe / Kaggle]
+        P[CLAHE Preprocessing\nv6_build.py]
+        Q[Roboflow Training\nRF-DETR Nano]
+        R[Auto Deploy\nwatch_v6.py]
+    end
+
+    A --> G --> F
+    B --> F --> I
+    I --> C --> D --> H --> E
+    J --> F
+    K --> O --> P --> Q --> R --> J
+    L --> R
+    M --> K
+</div>
+
+<h3>Technology Stack</h3>
+<table>
+  <tr><th>Layer</th><th>Technology</th><th>Purpose</th></tr>
+  <tr><td>Frontend</td><td>Vanilla HTML/CSS/JS (no framework)</td><td>Zero-dependency SPA</td></tr>
+  <tr><td>DICOM parsing</td><td>dicom-parser.js v1.8.21 (CDN)</td><td>Read .dcm files in-browser</td></tr>
+  <tr><td>AI Model</td><td>Roboflow RF-DETR Nano</td><td>Object detection inference</td></tr>
+  <tr><td>Model training</td><td>Roboflow Cloud (free tier)</td><td>GPU-accelerated training</td></tr>
+  <tr><td>Hosting</td><td>GitHub Pages</td><td>Static site hosting, free</td></tr>
+  <tr><td>Dataset mgmt</td><td>Roboflow SDK (Python 3.11)</td><td>Upload, version, train</td></tr>
+  <tr><td>Preprocessing</td><td>OpenCV 4.10 (cv2)</td><td>CLAHE contrast enhancement</td></tr>
+  <tr><td>Backend (local)</td><td>FastAPI (optional)</td><td>Local development server only</td></tr>
+</table>
+
+<!-- ── SECTION 3 ──────────────────────────────────────────────── -->
+<h2 id="s3"><span class="section-num">3.</span> Data Pipeline</h2>
+
+<div class="mermaid">
+flowchart LR
+    A["Raw Sources\nRoboflow Universe\nKaggle\nOriginal test_images"] -->|"Roboflow SDK\ndownload()"|B["Downloaded\nDatasets\nYOLO format"]
+    B -->|"OpenCV CLAHE\nclipLimit=4.0\ntileGridSize=8×8"|C["CLAHE-Enhanced\nImages\nclahe_datasets/"]
+    C -->|"project.upload()\nannotation_labelmap\n+ class remapping"|D["Roboflow\nProject\n21,806+ images"]
+    D -->|"generate_version()\naugmentation settings"|E["Dataset Version\nv6"]
+    E -->|"version.train()\nspeed='fast'\nRF-DETR Nano"|F["Trained Model"]
+    F -->|"watch_v6.py\npolls every 5min"|G{"Better than\ncurrent?"}
+    G -->|"Yes"|H["Update frontend\nINFER_URL → new version\ngit push → GitHub Pages"]
+    G -->|"No"|I["Keep current\ndeployment"]
+</div>
+
+<h3>CLAHE Preprocessing</h3>
+<p><strong>Contrast Limited Adaptive Histogram Equalization (CLAHE)</strong> is applied to all training images before upload. Unlike global histogram equalization, CLAHE operates on local image tiles, preventing over-amplification of noise in uniform regions — critical for CT scans where tissue contrast is subtle.</p>
+<pre>
+clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 8))
+enhanced = clahe.apply(grayscale_image)
+</pre>
+
+<h3>Class Name Normalisation</h3>
+<p>Different datasets use inconsistent class names. The <code>NAME_MAP</code> dictionary in <code>v6_build.py</code> normalises all variants:</p>
+<table>
+  <tr><th>Raw Class Name</th><th>Normalised To</th><th>Source Dataset</th></tr>
+  <tr><td>No Tumor, notumor, no_tumor</td><td>normal</td><td>ali-rostami</td></tr>
+  <tr><td>MildDemented, SevereDemented, VeryMildDemented</td><td>alzheimer</td><td>astrid, fcis</td></tr>
+  <tr><td>NonDemented</td><td>normal</td><td>astrid, fcis</td></tr>
+  <tr><td>label0, label1, label2</td><td>glioma</td><td>roboflow-100</td></tr>
+  <tr><td>hemorrhage, bleeding</td><td>bleeding</td><td>hemorrhage datasets</td></tr>
+</table>
+
+<h3>Dataset Sources</h3>
+<table>
+  <tr><th>Source</th><th>Images</th><th>Classes</th><th>Format</th><th>Status</th></tr>
+  <tr><td>diagnoct/brain-djpb5 (original)</td><td>2,023</td><td>6 (all)</td><td>classification</td><td>✅ In project</td></tr>
+  <tr><td>ali-rostami/labeled-mri-brain-tumor-dataset</td><td>2,443</td><td>glioma, meningioma, normal, pituitary</td><td>YOLOv8</td><td>✅ Uploaded</td></tr>
+  <tr><td>astrid/alzheimer-s-disease</td><td>3,262</td><td>alzheimer, normal</td><td>YOLOv8</td><td>✅ Uploaded</td></tr>
+  <tr><td>fcis-oudzj/alzheimer-s-detection</td><td>4,473</td><td>alzheimer, normal</td><td>YOLOv8</td><td>✅ Uploaded</td></tr>
+  <tr><td>roboflow-100/brain-tumor-m2pbp</td><td>9,900</td><td>glioma (label0-2)</td><td>YOLOv8</td><td>⚠️ Partially correct labels</td></tr>
+  <tr><td>brain-hemorrhage/brain-hemorrhage-detection</td><td>834</td><td>bleeding</td><td>multilabel-classification</td><td>❌ SDK download broken</td></tr>
+  <tr><td><strong>TOTAL in project</strong></td><td><strong>21,806</strong></td><td>7</td><td>-</td><td>✅</td></tr>
+</table>
+
+<!-- ── SECTION 4 ──────────────────────────────────────────────── -->
+<h2 id="s4"><span class="section-num">4.</span> Model Development History</h2>
+
+<div class="mermaid">
+timeline
+    title Model Version Timeline
+    May 26 : v2 - RF-DETR Nano
+           : mAP 97.1%
+           : 6 classes
+           : Original dataset
+    May 31 01:03 : v3 - RF-DETR Nano
+                 : mAP 95.6%
+                 : Auto-generated (overnight script)
+    May 31 02:02 : v4 - RF-DETR Nano
+                 : mAP 96.0% ← DEPLOYED
+                 : 7 classes incl. Alzheimer
+                 : 21806 images
+    May 31 13:38 : v5 - Roboflow 3.0 Fast
+                 : mAP 44.2% ← FAILED
+                 : Wrong architecture
+                 : Label pollution
+    May 31 15:30 : v6 - RF-DETR Nano (training)
+                 : CLAHE preprocessing
+                 : Full augmentation
+                 : 21806 images
+</div>
+
+<h3>Why v5 Failed (44.2% mAP)</h3>
+<table>
+  <tr><th>Root Cause</th><th>Impact</th></tr>
+  <tr><td>Wrong architecture: Roboflow 3.0 Fast (not RF-DETR)</td><td>Lower model capacity</td></tr>
+  <tr><td>label0/1/2 pollution from roboflow-100</td><td>3 spurious classes confused training</td></tr>
+  <tr><td>No proper augmentation configured</td><td>Overfitting to training distribution</td></tr>
+  <tr><td>Incorrect augmentation API params (floats not integers)</td><td>Default/no augmentation used</td></tr>
+</table>
+
+<!-- ── SECTION 5 ──────────────────────────────────────────────── -->
+<h2 id="s5"><span class="section-num">5.</span> v4 Performance Report (Current Deployment)</h2>
+
+<div class="metric-grid">
+  <div class="metric-card"><div class="val">96.0%</div><div class="lbl">mAP@50</div></div>
+  <div class="metric-card"><div class="val">96.6%</div><div class="lbl">Precision</div></div>
+  <div class="metric-card"><div class="val">93.9%</div><div class="lbl">Recall</div></div>
+  <div class="metric-card"><div class="val">95.2%</div><div class="lbl">F1 Score</div></div>
+</div>
+
+<table>
+  <tr><th>Metric</th><th>Definition</th><th>v4 Value</th><th>Interpretation</th></tr>
+  <tr><td>mAP@50</td><td>Mean Average Precision at IoU ≥ 0.50</td><td>96.0%</td><td>Excellent — bounding boxes ≥50% overlap with ground truth</td></tr>
+  <tr><td>Precision</td><td>TP / (TP + FP) — when model says disease, how often correct</td><td>96.6%</td><td>Very low false positive rate</td></tr>
+  <tr><td>Recall</td><td>TP / (TP + FN) — of all actual diseases, how many detected</td><td>93.9%</td><td>Misses ~6% of real findings — area for improvement</td></tr>
+  <tr><td>F1 Score</td><td>Harmonic mean of Precision and Recall</td><td>95.2%</td><td>Strong balanced performance</td></tr>
+</table>
+
+<h3>Model Details</h3>
+<table>
+  <tr><th>Parameter</th><th>Value</th></tr>
+  <tr><td>Architecture</td><td>Roboflow RF-DETR Object Detection (Nano)</td></tr>
+  <tr><td>Training speed</td><td>fast (free tier)</td></tr>
+  <tr><td>Input resolution</td><td>640 × 640 px</td></tr>
+  <tr><td>API endpoint</td><td><code>https://detect.roboflow.com/find-glioma-and-brainscope-ai/4</code></td></tr>
+  <tr><td>Response format</td><td>JSON — predictions[] with class (string), confidence, x, y, width, height</td></tr>
+  <tr><td>Training dataset size</td><td>21,806 images</td></tr>
+  <tr><td>Validation set</td><td>External (Roboflow held-out)</td></tr>
+  <tr><td>Training date</td><td>May 31, 2026 — 02:02 AM</td></tr>
+  <tr><td>License</td><td>Apache-2.0</td></tr>
+</table>
+
+<h3>Known Weaknesses (from Inspector Agent)</h3>
+<table>
+  <tr><th>Class</th><th>Test Images</th><th>Status</th></tr>
+  <tr><td>bleeding</td><td>107</td><td><span class="badge badge-red">Underrepresented</span></td></tr>
+  <tr><td>ischemia</td><td>113</td><td><span class="badge badge-red">Underrepresented</span></td></tr>
+  <tr><td>meningioma</td><td>177</td><td><span class="badge badge-yellow">Moderate</span></td></tr>
+  <tr><td>pituitary</td><td>210</td><td><span class="badge badge-yellow">Moderate</span></td></tr>
+  <tr><td>glioma</td><td>292</td><td><span class="badge badge-green">Good</span></td></tr>
+  <tr><td>normal</td><td>442</td><td><span class="badge badge-green">Good</span></td></tr>
+  <tr><td>Class imbalance ratio</td><td colspan="2">4.1× (bleeding vs normal)</td></tr>
+</table>
+
+<!-- ── SECTION 6 ──────────────────────────────────────────────── -->
+<h2 id="s6"><span class="section-num">6.</span> Frontend Application</h2>
+
+<div class="mermaid">
+sequenceDiagram
+    actor User
+    participant Browser
+    participant DicomParser
+    participant RoboflowAPI
+    participant ReportWriter
+
+    User->>Browser: Upload CT image (JPG/PNG/DICOM)
+    alt DICOM file
+        Browser->>DicomParser: parseDicom(byteArray)
+        DicomParser-->>Browser: pixel data + window/level
+        Browser->>Browser: render to canvas → JPEG
+    end
+    User->>Browser: Click "Analyze Image"
+    Browser->>Browser: toBase64(file)
+    Browser->>RoboflowAPI: POST base64 to /find-glioma-and-brainscope-ai/4
+    RoboflowAPI-->>Browser: predictions[] {class, confidence, x, y, w, h}
+    Browser->>Browser: CLASS_MAP lookup → display names
+    Browser->>Browser: drawBoxes() on canvas overlay
+    Browser->>Browser: displayResults() → detection list
+    User->>Browser: Click "Generate Report"
+    Browser->>ReportWriter: generateReport(lastPredictions)
+    ReportWriter->>ReportWriter: DISEASE_DB lookup → urgency + specialist
+    ReportWriter-->>User: HTML modal with urgency banner + findings + recommendations
+    User->>Browser: Print / Save PDF
+</div>
+
+<h3>DICOM Window/Level Rendering</h3>
+<p>CT scans store pixel values in <strong>Hounsfield Units (HU)</strong>. The brain window (WC=40, WW=80) is applied by default if not found in the DICOM header, mapping HU values to 0-255 grayscale:</p>
+<pre>
+val = clamp(((HU - (WC - WW/2)) / WW) × 255, 0, 255)
+</pre>
+
+<h3>ReportWriter Disease Database</h3>
+<table>
+  <tr><th>Disease</th><th>Urgency</th><th>Specialist Referral</th></tr>
+  <tr><td>bleeding</td><td><span class="badge badge-red">CRITICAL</span></td><td>Neurosurgeon (EMERGENCY)</td></tr>
+  <tr><td>ischemia</td><td><span class="badge badge-red">CRITICAL</span></td><td>Neurologist / Stroke Team (EMERGENCY)</td></tr>
+  <tr><td>glioma</td><td><span class="badge badge-yellow">HIGH</span></td><td>Neurosurgeon / Neuro-Oncologist</td></tr>
+  <tr><td>meningioma</td><td><span class="badge badge-blue">MODERATE</span></td><td>Neurosurgeon</td></tr>
+  <tr><td>pituitary</td><td><span class="badge badge-blue">MODERATE</span></td><td>Neurosurgeon / Endocrinologist</td></tr>
+  <tr><td>alzheimer</td><td><span class="badge badge-green">LOW</span></td><td>Neurologist / Geriatrician</td></tr>
+  <tr><td>normal</td><td><span class="badge badge-green">NONE</span></td><td>None required</td></tr>
+</table>
+
+<!-- ── SECTION 7 ──────────────────────────────────────────────── -->
+<h2 id="s7"><span class="section-num">7.</span> Agent System</h2>
+
+<div class="mermaid">
+graph LR
+    DH["🔍 DataHunter\nagent_datahunter.py\n\nSearches Roboflow Universe\nfor new brain datasets\nPriority: bleeding, ischemia"]
+    IN["🔬 Inspector\nagent_inspector.py\n\nClass balance check\nBlur detection\nMislabel detection"]
+    AT["🏋️ AutoTrainer\nagent_autotrainer.py\n\nCompares model versions\nAuto-deploys best model\nUpdates GitHub Pages"]
+    RW["📋 ReportWriter\nfrontend JavaScript\n\nGenerates medical report\nUrgency classification\nSpecialist referral"]
+
+    DH -->|"Found dataset"| AT
+    IN -->|"Quality report"| DH
+    IN -->|"Weak classes"| DH
+    AT -->|"New model deployed"| RW
+    RW -->|"Feedback needed"| IN
+</div>
+
+<div class="agent-card">
+  <h3>🔍 DataHunter</h3>
+  <p>Searches 7+ known Roboflow Universe repositories for brain imaging datasets. Prioritises underrepresented classes (bleeding, ischemia). Outputs <code>datahunter_results.json</code> with image counts and accessibility status.</p>
+  <p><strong>Run:</strong> <code>python agent_datahunter.py [--download]</code></p>
+</div>
+
+<div class="agent-card">
+  <h3>🏋️ AutoTrainer</h3>
+  <p>Compares new trained model against current best (tracked in <code>autotrainer_state.json</code>). Tests accuracy on local test images. If new model beats old by any margin, updates <code>frontend/index.html</code>, commits, and pushes to GitHub Pages automatically.</p>
+  <p><strong>Run:</strong> <code>python agent_autotrainer.py [status|deploy|test N|check-v6]</code></p>
+</div>
+
+<div class="agent-card">
+  <h3>🔬 Inspector</h3>
+  <p>Audits dataset quality: (1) counts images per class to detect imbalance, (2) calculates Laplacian variance for blur detection (threshold &lt;50), (3) uses current model to flag images where prediction disagrees with label at ≥50% confidence.</p>
+  <p><strong>Run:</strong> <code>python agent_inspector.py [full|balance|quality|mislabeled]</code></p>
+</div>
+
+<div class="agent-card">
+  <h3>📋 ReportWriter (Browser Agent)</h3>
+  <p>Embedded JavaScript in <code>frontend/index.html</code>. Triggered by "Generate Report" button after analysis. Maps predictions to a disease database (DISEASE_DB) containing urgency level, specialist recommendation, and clinical action. Outputs a printable HTML report.</p>
+  <p><strong>Output:</strong> HTML modal with urgency banner, findings table, specialist referral list, disclaimer</p>
+</div>
+
+<!-- ── SECTION 8 ──────────────────────────────────────────────── -->
+<h2 id="s8"><span class="section-num">8.</span> Setup Guide (From Scratch)</h2>
+
+<h3>Prerequisites</h3>
+<pre>
+Python 3.11
+pip install roboflow opencv-python-headless numpy requests pyyaml fastapi uvicorn python-dotenv
+Node.js (optional, for local dev server)
+</pre>
+
+<h3>Step 1: Clone and configure</h3>
+<pre>
+git clone https://github.com/chokdee255120-dot/brainscope-ai.git
+cd brainscope-ai
+git config user.email "totoolclaude@gmail.com"
+git config user.name "chokdee255120-dot"
+</pre>
+
+<h3>Step 2: (Optional) Run local backend</h3>
+<pre>
+start_backend.bat           # Windows — starts FastAPI on http://localhost:8000
+# OR:
+cd backend && uvicorn main:app --reload
+</pre>
+
+<h3>Step 3: Deploy frontend change</h3>
+<pre>
+# Edit frontend/index.html, then:
+Copy-Item frontend/index.html index.html    # PowerShell
+git add index.html frontend/index.html
+git commit -m "your message"
+git push origin main
+# GitHub Pages rebuilds automatically (~2 min)
+</pre>
+
+<h3>Step 4: Train new model version</h3>
+<pre>
+# Quick: generate version from existing 21,806 images and train
+python gen_v6_now.py
+
+# Full: CLAHE preprocessing + upload + generate + train (overnight)
+python v6_build.py
+
+# Monitor and auto-deploy when training completes
+python watch_v6.py
+</pre>
+
+<h3>Step 5: Deploy best model</h3>
+<pre>
+python agent_autotrainer.py status    # Check current best
+python agent_autotrainer.py deploy    # Compare + auto-deploy
+</pre>
+
+<h3>Step 6: Run inspection</h3>
+<pre>
+python agent_inspector.py full        # Full quality report
+python agent_datahunter.py --download # Find + download new data
+</pre>
+
+<h3>GitHub Pages Configuration</h3>
+<p>Settings → Pages → Source: Deploy from branch → main → / (root)</p>
+<p>The <code>index.html</code> at repo root is served directly. No build step required.</p>
+
+<!-- ── SECTION 9 ──────────────────────────────────────────────── -->
+<h2 id="s9"><span class="section-num">9.</span> Pending Work & Roadmap</h2>
+
+<table>
+  <tr><th>Priority</th><th>Task</th><th>Expected Impact</th></tr>
+  <tr><td><span class="badge badge-red">CRITICAL</span></td><td>Deploy v6 when training completes → <code>python agent_autotrainer.py deploy</code></td><td>CLAHE + augmentation improvement</td></tr>
+  <tr><td><span class="badge badge-yellow">HIGH</span></td><td>Fix <code>add_hemorrhage.py</code> — download brain-hemorrhage dataset (multilabel-class SDK issue)</td><td>+834 bleeding images → better bleeding recall</td></tr>
+  <tr><td><span class="badge badge-yellow">HIGH</span></td><td>Find and add ischemia/stroke CT datasets</td><td>Improve ischemia from ~113 → 2000+ images</td></tr>
+  <tr><td><span class="badge badge-blue">MEDIUM</span></td><td>Run <code>agent_inspector.py full</code> → review mislabeled images</td><td>Cleaner dataset → higher precision</td></tr>
+  <tr><td><span class="badge badge-blue">MEDIUM</span></td><td>v7: train on CLAHE-processed dataset (v6_build.py still uploading)</td><td>Full CLAHE benefit</td></tr>
+  <tr><td><span class="badge badge-green">LOW</span></td><td>Upgrade Roboflow plan → access RF-DETR Large / accurate training</td><td>Potential 98%+ mAP</td></tr>
+  <tr><td><span class="badge badge-green">LOW</span></td><td>Add confidence calibration to ReportWriter</td><td>More honest uncertainty reporting</td></tr>
+</table>
+
+<h3>Path to 98%+ mAP</h3>
+<p>Based on published research (YOLO11 with attention: 99.3% mAP@0.5, RF-DETR Large: 99.5% on meningioma), achieving 98%+ requires:</p>
+<ol style="padding-left:20px;line-height:2">
+  <li><strong>RF-DETR Large</strong> (requires paid Roboflow plan — accurate training mode)</li>
+  <li><strong>Balanced dataset</strong> — at least 1,000 images per class for all 7 classes</li>
+  <li><strong>CLAHE preprocessing</strong> on all training images (v7, currently uploading)</li>
+  <li><strong>Full augmentation</strong> — mosaic, mixup, rotation, flip, brightness, noise</li>
+  <li><strong>Clean labels</strong> — remove label0/1/2 pollution via Roboflow class remapping</li>
+</ol>
+
+<hr style="margin: 40px 0; border-color: #e5e7eb">
+<p style="text-align:center; color:#9ca3af; font-size:0.85rem">
+  BrainScope AI — Technical Report &nbsp;|&nbsp; Generated May 31, 2026 &nbsp;|&nbsp;
+  <em>For educational and research purposes. Not a medical device. All AI findings must be reviewed by qualified medical professionals.</em>
+</p>
+
+</div>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });</script>
+</body>
+</html>
