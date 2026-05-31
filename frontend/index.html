@@ -1270,11 +1270,12 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
-  const INFER_URL = 'https://detect.roboflow.com/find-glioma-and-brainscope-ai/5';
+  // v5 training in progress — using v2 temporarily
+  const INFER_URL = 'https://detect.roboflow.com/find-glioma-and-brainscope-ai/2';
   const ROBOFLOW_KEY = 'CXCNe93GGPiEeF2XrcYE';
   const CLASS_MAP = {
-    '0':'Alzheimer','1':'Bleeding','2':'Glioma',
-    '3':'Ischemia','4':'Meningioma','5':'Normal','6':'Pituitary'
+    '0':'Bleeding','1':'Glioma','2':'Ischemia',
+    '3':'Meningioma','4':'Normal','5':'Pituitary'
   };
 
   const COLORS = ['#0EA5A0','#F59E0B','#EF4444','#8B5CF6','#10B981','#F97316','#3B82F6'];
